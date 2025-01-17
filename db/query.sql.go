@@ -39,6 +39,27 @@ func (q *Queries) CreateDrill(ctx context.Context, arg CreateDrillParams) (Drill
 	return i, err
 }
 
+const createGoal = `-- name: CreateGoal :one
+INSERT INTO goals (
+    goal_name, goal_type
+) VALUES (
+    $1, $2
+)
+RETURNING goal_id, goal_type, goal_name
+`
+
+type CreateGoalParams struct {
+	GoalName string `json:"goalName"`
+	GoalType string `json:"goalType"`
+}
+
+func (q *Queries) CreateGoal(ctx context.Context, arg CreateGoalParams) (Goal, error) {
+	row := q.db.QueryRow(ctx, createGoal, arg.GoalName, arg.GoalType)
+	var i Goal
+	err := row.Scan(&i.GoalID, &i.GoalType, &i.GoalName)
+	return i, err
+}
+
 const createPerformance = `-- name: CreatePerformance :one
 INSERT INTO player_performances (
     player_id, drill_id, date, attempts, successful
@@ -73,6 +94,98 @@ func (q *Queries) CreatePerformance(ctx context.Context, arg CreatePerformancePa
 		&i.Attempts,
 		&i.Successful,
 	)
+	return i, err
+}
+
+const createPlayerGoal = `-- name: CreatePlayerGoal :one
+INSERT INTO player_goals (
+    player_id, goal_id, current_value, goal_value
+) VALUES (
+    $1, $2, $3, $4
+)
+RETURNING player_goal_id, player_id, goal_id, current_value, goal_value
+`
+
+type CreatePlayerGoalParams struct {
+	PlayerID     uuid.UUID   `json:"playerId"`
+	GoalID       uuid.UUID   `json:"goalId"`
+	CurrentValue pgtype.Int4 `json:"currentValue"`
+	GoalValue    int32       `json:"goalValue"`
+}
+
+func (q *Queries) CreatePlayerGoal(ctx context.Context, arg CreatePlayerGoalParams) (PlayerGoal, error) {
+	row := q.db.QueryRow(ctx, createPlayerGoal,
+		arg.PlayerID,
+		arg.GoalID,
+		arg.CurrentValue,
+		arg.GoalValue,
+	)
+	var i PlayerGoal
+	err := row.Scan(
+		&i.PlayerGoalID,
+		&i.PlayerID,
+		&i.GoalID,
+		&i.CurrentValue,
+		&i.GoalValue,
+	)
+	return i, err
+}
+
+const createSession = `-- name: CreateSession :one
+INSERT INTO sessions (
+    user_id, session_type, session_name, date, location
+) VALUES (
+    $1, $2, $3, $4, $5
+)
+RETURNING session_id, session_type, date, location, user_id, session_name
+`
+
+type CreateSessionParams struct {
+	UserID      uuid.UUID          `json:"userId"`
+	SessionType string             `json:"sessionType"`
+	SessionName string             `json:"sessionName"`
+	Date        pgtype.Timestamptz `json:"date"`
+	Location    pgtype.Text        `json:"location"`
+}
+
+func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error) {
+	row := q.db.QueryRow(ctx, createSession,
+		arg.UserID,
+		arg.SessionType,
+		arg.SessionName,
+		arg.Date,
+		arg.Location,
+	)
+	var i Session
+	err := row.Scan(
+		&i.SessionID,
+		&i.SessionType,
+		&i.Date,
+		&i.Location,
+		&i.UserID,
+		&i.SessionName,
+	)
+	return i, err
+}
+
+const createSessionPerformance = `-- name: CreateSessionPerformance :one
+INSERT INTO session_performances (
+    session_id, player_performance_id
+) VALUES (
+    $1, $2
+)
+RETURNING session_performance_id, session_id, player_performance_id
+`
+
+type CreateSessionPerformanceParams struct {
+	SessionID           uuid.UUID `json:"sessionId"`
+	PlayerPerformanceID uuid.UUID `json:"playerPerformanceId"`
+}
+
+func (q *Queries) CreateSessionPerformance(ctx context.Context, arg CreateSessionPerformanceParams) (SessionPerformance, error) {
+	row := q.db.QueryRow(ctx, createSessionPerformance, arg.SessionID, arg.PlayerPerformanceID)
+	var i SessionPerformance
+	err := row.Scan(&i.SessionPerformanceID, &i.SessionID, &i.PlayerPerformanceID)
 	return i, err
 }
 
@@ -123,6 +236,16 @@ func (q *Queries) DeleteDrill(ctx context.Context, drillID uuid.UUID) error {
 	return err
 }
 
+const deleteGoal = `-- name: DeleteGoal :exec
+DELETE FROM goals
+WHERE goal_id = $1
+`
+
+func (q *Queries) DeleteGoal(ctx context.Context, goalID uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deleteGoal, goalID)
+	return err
+}
+
 const deletePerformance = `-- name: DeletePerformance :exec
 DELETE FROM player_performances
 WHERE player_performance_id = $1
@@ -130,6 +253,36 @@ WHERE player_performance_id = $1
 
 func (q *Queries) DeletePerformance(ctx context.Context, playerPerformanceID uuid.UUID) error {
 	_, err := q.db.Exec(ctx, deletePerformance, playerPerformanceID)
+	return err
+}
+
+const deletePlayerGoal = `-- name: DeletePlayerGoal :exec
+DELETE FROM player_goals
+WHERE player_goal_id = $1
+`
+
+func (q *Queries) DeletePlayerGoal(ctx context.Context, playerGoalID uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deletePlayerGoal, playerGoalID)
+	return err
+}
+
+const deleteSession = `-- name: DeleteSession :exec
+DELETE FROM sessions
+WHERE session_id = $1
+`
+
+func (q *Queries) DeleteSession(ctx context.Context, sessionID uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deleteSession, sessionID)
+	return err
+}
+
+const deleteSessionPerformance = `-- name: DeleteSessionPerformance :exec
+DELETE FROM session_performances
+WHERE session_performance_id = $1
+`
+
+func (q *Queries) DeleteSessionPerformance(ctx context.Context, sessionPerformanceID uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deleteSessionPerformance, sessionPerformanceID)
 	return err
 }
 
@@ -158,6 +311,64 @@ func (q *Queries) GetDrill(ctx context.Context, drillID uuid.UUID) (Drill, error
 		&i.Difficulty,
 	)
 	return i, err
+}
+
+const getGoal = `-- name: GetGoal :one
+SELECT goal_id, goal_type, goal_name from goals
+WHERE goal_id = $1 LIMIT 1
+`
+
+func (q *Queries) GetGoal(ctx context.Context, goalID uuid.UUID) (Goal, error) {
+	row := q.db.QueryRow(ctx, getGoal, goalID)
+	var i Goal
+	err := row.Scan(&i.GoalID, &i.GoalType, &i.GoalName)
+	return i, err
+}
+
+const getGoalsByPlayer = `-- name: GetGoalsByPlayer :many
+SELECT 
+    g.goal_id,
+    g.goal_name,
+    g.goal_type,
+    pg.current_value,
+    pg.goal_value
+FROM player_goals as pg
+JOIN goals as g on g.goal_id = pg.goal_id
+WHERE pg.player_id = $1
+`
+
+type GetGoalsByPlayerRow struct {
+	GoalID       uuid.UUID   `json:"goalId"`
+	GoalName     string      `json:"goalName"`
+	GoalType     string      `json:"goalType"`
+	CurrentValue pgtype.Int4 `json:"currentValue"`
+	GoalValue    int32       `json:"goalValue"`
+}
+
+func (q *Queries) GetGoalsByPlayer(ctx context.Context, playerID uuid.UUID) ([]GetGoalsByPlayerRow, error) {
+	rows, err := q.db.Query(ctx, getGoalsByPlayer, playerID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetGoalsByPlayerRow
+	for rows.Next() {
+		var i GetGoalsByPlayerRow
+		if err := rows.Scan(
+			&i.GoalID,
+			&i.GoalName,
+			&i.GoalType,
+			&i.CurrentValue,
+			&i.GoalValue,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getPerformance = `-- name: GetPerformance :one
@@ -277,6 +488,173 @@ func (q *Queries) GetPerformancesByPlayer(ctx context.Context, playerID uuid.UUI
 	return items, nil
 }
 
+const getPerformancesBySession = `-- name: GetPerformancesBySession :many
+SELECT 
+    p.player_id,
+    p.date,
+    d.drill_id,
+    d.drill_name,
+    attempts,
+    successful
+FROM player_performances as p
+JOIN drills as d on d.drill_id = p.drill_id
+JOIN session_performances as sp on sp.player_performance_id = p.player_performance_id
+WHERE sp.session_id = $1
+`
+
+type GetPerformancesBySessionRow struct {
+	PlayerID   uuid.UUID   `json:"playerId"`
+	Date       pgtype.Date `json:"date"`
+	DrillID    uuid.UUID   `json:"drillId"`
+	DrillName  string      `json:"drillName"`
+	Attempts   pgtype.Int4 `json:"attempts"`
+	Successful pgtype.Int4 `json:"successful"`
+}
+
+func (q *Queries) GetPerformancesBySession(ctx context.Context, sessionID uuid.UUID) ([]GetPerformancesBySessionRow, error) {
+	rows, err := q.db.Query(ctx, getPerformancesBySession, sessionID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetPerformancesBySessionRow
+	for rows.Next() {
+		var i GetPerformancesBySessionRow
+		if err := rows.Scan(
+			&i.PlayerID,
+			&i.Date,
+			&i.DrillID,
+			&i.DrillName,
+			&i.Attempts,
+			&i.Successful,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getPlayerGoal = `-- name: GetPlayerGoal :one
+SELECT player_goal_id, player_id, goal_id, current_value, goal_value from player_goals
+WHERE player_goal_id = $1 LIMIT 1
+`
+
+func (q *Queries) GetPlayerGoal(ctx context.Context, playerGoalID uuid.UUID) (PlayerGoal, error) {
+	row := q.db.QueryRow(ctx, getPlayerGoal, playerGoalID)
+	var i PlayerGoal
+	err := row.Scan(
+		&i.PlayerGoalID,
+		&i.PlayerID,
+		&i.GoalID,
+		&i.CurrentValue,
+		&i.GoalValue,
+	)
+	return i, err
+}
+
+const getSession = `-- name: GetSession :one
+SELECT session_id, session_type, date, location, user_id, session_name from sessions
+WHERE session_id = $1 LIMIT 1
+`
+
+func (q *Queries) GetSession(ctx context.Context, sessionID uuid.UUID) (Session, error) {
+	row := q.db.QueryRow(ctx, getSession, sessionID)
+	var i Session
+	err := row.Scan(
+		&i.SessionID,
+		&i.SessionType,
+		&i.Date,
+		&i.Location,
+		&i.UserID,
+		&i.SessionName,
+	)
+	return i, err
+}
+
+const getSessionByPerformance = `-- name: GetSessionByPerformance :one
+SELECT 
+    sessions.session_id,
+    session_type,
+    session_name,
+    location,
+    sessions.date,
+    sessions.user_id
+from sessions
+JOIN session_performances as sp on sp.session_id = sessions.session_id
+WHERE sp.player_performance_id = $1
+`
+
+type GetSessionByPerformanceRow struct {
+	SessionID   uuid.UUID          `json:"sessionId"`
+	SessionType string             `json:"sessionType"`
+	SessionName string             `json:"sessionName"`
+	Location    pgtype.Text        `json:"location"`
+	Date        pgtype.Timestamptz `json:"date"`
+	UserID      uuid.UUID          `json:"userId"`
+}
+
+func (q *Queries) GetSessionByPerformance(ctx context.Context, playerPerformanceID uuid.UUID) (GetSessionByPerformanceRow, error) {
+	row := q.db.QueryRow(ctx, getSessionByPerformance, playerPerformanceID)
+	var i GetSessionByPerformanceRow
+	err := row.Scan(
+		&i.SessionID,
+		&i.SessionType,
+		&i.SessionName,
+		&i.Location,
+		&i.Date,
+		&i.UserID,
+	)
+	return i, err
+}
+
+const getSessionPerformance = `-- name: GetSessionPerformance :one
+SELECT session_performance_id, session_id, player_performance_id from session_performances
+WHERE session_performance_id = $1 LIMIT 1
+`
+
+func (q *Queries) GetSessionPerformance(ctx context.Context, sessionPerformanceID uuid.UUID) (SessionPerformance, error) {
+	row := q.db.QueryRow(ctx, getSessionPerformance, sessionPerformanceID)
+	var i SessionPerformance
+	err := row.Scan(&i.SessionPerformanceID, &i.SessionID, &i.PlayerPerformanceID)
+	return i, err
+}
+
+const getSessionsByOwner = `-- name: GetSessionsByOwner :many
+SELECT session_id, session_type, date, location, user_id, session_name from sessions
+WHERE user_id = $1
+`
+
+func (q *Queries) GetSessionsByOwner(ctx context.Context, userID uuid.UUID) ([]Session, error) {
+	rows, err := q.db.Query(ctx, getSessionsByOwner, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Session
+	for rows.Next() {
+		var i Session
+		if err := rows.Scan(
+			&i.SessionID,
+			&i.SessionType,
+			&i.Date,
+			&i.Location,
+			&i.UserID,
+			&i.SessionName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getUser = `-- name: GetUser :one
 SELECT user_id, username, passhash, email, firstname, lastname from users
 where user_id = $1 LIMIT 1
@@ -326,6 +704,31 @@ func (q *Queries) ListDrills(ctx context.Context) ([]Drill, error) {
 	return items, nil
 }
 
+const listGoals = `-- name: ListGoals :many
+SELECT goal_id, goal_type, goal_name from goals
+ORDER BY goal_name asc
+`
+
+func (q *Queries) ListGoals(ctx context.Context) ([]Goal, error) {
+	rows, err := q.db.Query(ctx, listGoals)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Goal
+	for rows.Next() {
+		var i Goal
+		if err := rows.Scan(&i.GoalID, &i.GoalType, &i.GoalName); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listPerformance = `-- name: ListPerformance :many
 SELECT player_performance_id, player_id, drill_id, date, attempts, successful from player_performances
 ORDER BY date desc
@@ -347,6 +750,94 @@ func (q *Queries) ListPerformance(ctx context.Context) ([]PlayerPerformance, err
 			&i.Date,
 			&i.Attempts,
 			&i.Successful,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listPlayerGoals = `-- name: ListPlayerGoals :many
+SELECT player_goal_id, player_id, goal_id, current_value, goal_value from player_goals
+ORDER BY goal_id
+`
+
+func (q *Queries) ListPlayerGoals(ctx context.Context) ([]PlayerGoal, error) {
+	rows, err := q.db.Query(ctx, listPlayerGoals)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []PlayerGoal
+	for rows.Next() {
+		var i PlayerGoal
+		if err := rows.Scan(
+			&i.PlayerGoalID,
+			&i.PlayerID,
+			&i.GoalID,
+			&i.CurrentValue,
+			&i.GoalValue,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listSessionPerformance = `-- name: ListSessionPerformance :many
+SELECT session_performance_id, session_id, player_performance_id from session_performances
+ORDER BY session_id
+`
+
+func (q *Queries) ListSessionPerformance(ctx context.Context) ([]SessionPerformance, error) {
+	rows, err := q.db.Query(ctx, listSessionPerformance)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []SessionPerformance
+	for rows.Next() {
+		var i SessionPerformance
+		if err := rows.Scan(&i.SessionPerformanceID, &i.SessionID, &i.PlayerPerformanceID); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listSessions = `-- name: ListSessions :many
+SELECT session_id, session_type, date, location, user_id, session_name from sessions
+ORDER BY session_name asc
+`
+
+func (q *Queries) ListSessions(ctx context.Context) ([]Session, error) {
+	rows, err := q.db.Query(ctx, listSessions)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Session
+	for rows.Next() {
+		var i Session
+		if err := rows.Scan(
+			&i.SessionID,
+			&i.SessionType,
+			&i.Date,
+			&i.Location,
+			&i.UserID,
+			&i.SessionName,
 		); err != nil {
 			return nil, err
 		}
@@ -415,6 +906,24 @@ func (q *Queries) UpdateDrill(ctx context.Context, arg UpdateDrillParams) error 
 	return err
 }
 
+const updateGoal = `-- name: UpdateGoal :exec
+UPDATE goals
+    SET goal_name = $2,
+    goal_type = $3
+WHERE goal_id = $1
+`
+
+type UpdateGoalParams struct {
+	GoalID   uuid.UUID `json:"goalId"`
+	GoalName string    `json:"goalName"`
+	GoalType string    `json:"goalType"`
+}
+
+func (q *Queries) UpdateGoal(ctx context.Context, arg UpdateGoalParams) error {
+	_, err := q.db.Exec(ctx, updateGoal, arg.GoalID, arg.GoalName, arg.GoalType)
+	return err
+}
+
 const updatePerformance = `-- name: UpdatePerformance :exec
 UPDATE player_performances
     SET player_id = $2,
@@ -443,6 +952,83 @@ func (q *Queries) UpdatePerformance(ctx context.Context, arg UpdatePerformancePa
 		arg.Attempts,
 		arg.Successful,
 	)
+	return err
+}
+
+const updatePlayerGoal = `-- name: UpdatePlayerGoal :exec
+UPDATE player_goals
+    SET player_id = $2,
+    goal_id = $3,
+    current_value = $4,
+    goal_value = $5
+WHERE player_goal_id = $1
+`
+
+type UpdatePlayerGoalParams struct {
+	PlayerGoalID uuid.UUID   `json:"playerGoalId"`
+	PlayerID     uuid.UUID   `json:"playerId"`
+	GoalID       uuid.UUID   `json:"goalId"`
+	CurrentValue pgtype.Int4 `json:"currentValue"`
+	GoalValue    int32       `json:"goalValue"`
+}
+
+func (q *Queries) UpdatePlayerGoal(ctx context.Context, arg UpdatePlayerGoalParams) error {
+	_, err := q.db.Exec(ctx, updatePlayerGoal,
+		arg.PlayerGoalID,
+		arg.PlayerID,
+		arg.GoalID,
+		arg.CurrentValue,
+		arg.GoalValue,
+	)
+	return err
+}
+
+const updateSession = `-- name: UpdateSession :exec
+UPDATE sessions
+    SET user_id = $2,
+    session_type = $3,
+    session_name = $4,
+    date = $5,
+    location = $6
+WHERE session_id = $1
+`
+
+type UpdateSessionParams struct {
+	SessionID   uuid.UUID          `json:"sessionId"`
+	UserID      uuid.UUID          `json:"userId"`
+	SessionType string             `json:"sessionType"`
+	SessionName string             `json:"sessionName"`
+	Date        pgtype.Timestamptz `json:"date"`
+	Location    pgtype.Text        `json:"location"`
+}
+
+func (q *Queries) UpdateSession(ctx context.Context, arg UpdateSessionParams) error {
+	_, err := q.db.Exec(ctx, updateSession,
+		arg.SessionID,
+		arg.UserID,
+		arg.SessionType,
+		arg.SessionName,
+		arg.Date,
+		arg.Location,
+	)
+	return err
+}
+
+const updateSessionPerformance = `-- name: UpdateSessionPerformance :exec
+UPDATE session_performances
+    SET session_id = $2,
+    player_performance_id = $3
+WHERE session_performance_id = $1
+`
+
+type UpdateSessionPerformanceParams struct {
+	SessionPerformanceID uuid.UUID `json:"sessionPerformanceId"`
+	SessionID            uuid.UUID `json:"sessionId"`
+	PlayerPerformanceID  uuid.UUID `json:"playerPerformanceId"`
+}
+
+func (q *Queries) UpdateSessionPerformance(ctx context.Context, arg UpdateSessionPerformanceParams) error {
+	_, err := q.db.Exec(ctx, updateSessionPerformance, arg.SessionPerformanceID, arg.SessionID, arg.PlayerPerformanceID)
 	return err
 }
 

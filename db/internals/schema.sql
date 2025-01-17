@@ -35,6 +35,48 @@ CREATE TABLE public.drills (
 ALTER TABLE public.drills OWNER TO postgres;
 
 --
+-- Name: goals; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.goals (
+    goal_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    goal_type character varying(50) NOT NULL,
+    goal_name character varying(50) NOT NULL
+);
+
+
+ALTER TABLE public.goals OWNER TO postgres;
+
+--
+-- Name: TABLE goals; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON TABLE public.goals IS 'lookup table for different types of goals';
+
+
+--
+-- Name: player_goals; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.player_goals (
+    player_goal_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    player_id uuid NOT NULL,
+    goal_id uuid NOT NULL,
+    current_value integer,
+    goal_value integer NOT NULL
+);
+
+
+ALTER TABLE public.player_goals OWNER TO postgres;
+
+--
+-- Name: TABLE player_goals; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON TABLE public.player_goals IS 'tracks players goals';
+
+
+--
 -- Name: player_performances; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -49,6 +91,49 @@ CREATE TABLE public.player_performances (
 
 
 ALTER TABLE public.player_performances OWNER TO postgres;
+
+--
+-- Name: session_performances; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.session_performances (
+    session_performance_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    session_id uuid NOT NULL,
+    player_performance_id uuid NOT NULL
+);
+
+
+ALTER TABLE public.session_performances OWNER TO postgres;
+
+--
+-- Name: TABLE session_performances; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON TABLE public.session_performances IS 'tracks performances on a session level';
+
+
+--
+-- Name: sessions; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.sessions (
+    session_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    session_type character varying(25) NOT NULL,
+    date timestamp with time zone NOT NULL,
+    location character varying(50),
+    user_id uuid NOT NULL,
+    session_name character varying(50) NOT NULL
+);
+
+
+ALTER TABLE public.sessions OWNER TO postgres;
+
+--
+-- Name: TABLE sessions; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON TABLE public.sessions IS 'stores sessions for player workouts';
+
 
 --
 -- Name: users; Type: TABLE; Schema: public; Owner: postgres
@@ -75,11 +160,43 @@ ALTER TABLE ONLY public.drills
 
 
 --
+-- Name: goals goal_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.goals
+    ADD CONSTRAINT goal_pkey PRIMARY KEY (goal_id);
+
+
+--
+-- Name: player_goals player_goal_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.player_goals
+    ADD CONSTRAINT player_goal_pkey PRIMARY KEY (player_goal_id);
+
+
+--
 -- Name: player_performances player_performances_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.player_performances
     ADD CONSTRAINT player_performances_pkey PRIMARY KEY (player_performance_id);
+
+
+--
+-- Name: session_performances session_performance_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.session_performances
+    ADD CONSTRAINT session_performance_pkey PRIMARY KEY (session_performance_id);
+
+
+--
+-- Name: sessions session_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.sessions
+    ADD CONSTRAINT session_pkey PRIMARY KEY (session_id);
 
 
 --
@@ -99,11 +216,51 @@ ALTER TABLE ONLY public.player_performances
 
 
 --
+-- Name: player_goals goal; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.player_goals
+    ADD CONSTRAINT goal FOREIGN KEY (goal_id) REFERENCES public.goals(goal_id);
+
+
+--
 -- Name: player_performances player; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.player_performances
     ADD CONSTRAINT player FOREIGN KEY (player_id) REFERENCES public.users(user_id) ON DELETE CASCADE;
+
+
+--
+-- Name: player_goals player; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.player_goals
+    ADD CONSTRAINT player FOREIGN KEY (player_id) REFERENCES public.users(user_id);
+
+
+--
+-- Name: session_performances player_performance; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.session_performances
+    ADD CONSTRAINT player_performance FOREIGN KEY (player_performance_id) REFERENCES public.player_performances(player_performance_id);
+
+
+--
+-- Name: session_performances session; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.session_performances
+    ADD CONSTRAINT session FOREIGN KEY (session_id) REFERENCES public.sessions(session_id);
+
+
+--
+-- Name: sessions session_owner; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.sessions
+    ADD CONSTRAINT session_owner FOREIGN KEY (user_id) REFERENCES public.users(user_id) ON DELETE CASCADE;
 
 
 --

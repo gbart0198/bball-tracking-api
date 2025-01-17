@@ -16,6 +16,22 @@ type Drill struct {
 	Difficulty pgtype.Text `json:"difficulty"`
 }
 
+// lookup table for different types of goals
+type Goal struct {
+	GoalID   uuid.UUID `json:"goalId"`
+	GoalType string    `json:"goalType"`
+	GoalName string    `json:"goalName"`
+}
+
+// tracks players goals
+type PlayerGoal struct {
+	PlayerGoalID uuid.UUID   `json:"playerGoalId"`
+	PlayerID     uuid.UUID   `json:"playerId"`
+	GoalID       uuid.UUID   `json:"goalId"`
+	CurrentValue pgtype.Int4 `json:"currentValue"`
+	GoalValue    int32       `json:"goalValue"`
+}
+
 type PlayerPerformance struct {
 	PlayerPerformanceID uuid.UUID   `json:"playerPerformanceId"`
 	PlayerID            uuid.UUID   `json:"playerId"`
@@ -23,6 +39,23 @@ type PlayerPerformance struct {
 	Date                pgtype.Date `json:"date"`
 	Attempts            pgtype.Int4 `json:"attempts"`
 	Successful          pgtype.Int4 `json:"successful"`
+}
+
+// stores sessions for player workouts
+type Session struct {
+	SessionID   uuid.UUID          `json:"sessionId"`
+	SessionType string             `json:"sessionType"`
+	Date        pgtype.Timestamptz `json:"date"`
+	Location    pgtype.Text        `json:"location"`
+	UserID      uuid.UUID          `json:"userId"`
+	SessionName string             `json:"sessionName"`
+}
+
+// tracks performances on a session level
+type SessionPerformance struct {
+	SessionPerformanceID uuid.UUID `json:"sessionPerformanceId"`
+	SessionID            uuid.UUID `json:"sessionId"`
+	PlayerPerformanceID  uuid.UUID `json:"playerPerformanceId"`
 }
 
 type User struct {

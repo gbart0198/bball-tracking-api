@@ -110,3 +110,153 @@ JOIN drills as d on d.drill_id = p.drill_id
 WHERE d.drill_id = $1
 ORDER BY date desc;
 
+-- name: GetGoal :one
+SELECT * from goals
+WHERE goal_id = $1 LIMIT 1;
+
+-- name: ListGoals :many
+SELECT * from goals
+ORDER BY goal_name asc;
+
+-- name: CreateGoal :one
+INSERT INTO goals (
+    goal_name, goal_type
+) VALUES (
+    $1, $2
+)
+RETURNING *;
+
+-- name: UpdateGoal :exec
+UPDATE goals
+    SET goal_name = $2,
+    goal_type = $3
+WHERE goal_id = $1;
+
+-- name: DeleteGoal :exec
+DELETE FROM goals
+WHERE goal_id = $1;
+
+-- name: GetPlayerGoal :one
+SELECT * from player_goals
+WHERE player_goal_id = $1 LIMIT 1;
+
+-- name: ListPlayerGoals :many
+SELECT * from player_goals
+ORDER BY goal_id;
+
+-- name: CreatePlayerGoal :one
+INSERT INTO player_goals (
+    player_id, goal_id, current_value, goal_value
+) VALUES (
+    $1, $2, $3, $4
+)
+RETURNING *;
+
+-- name: UpdatePlayerGoal :exec
+UPDATE player_goals
+    SET player_id = $2,
+    goal_id = $3,
+    current_value = $4,
+    goal_value = $5
+WHERE player_goal_id = $1;
+
+-- name: DeletePlayerGoal :exec
+DELETE FROM player_goals
+WHERE player_goal_id = $1;
+
+-- name: GetSession :one
+SELECT * from sessions
+WHERE session_id = $1 LIMIT 1;
+
+-- name: ListSessions :many
+SELECT * from sessions
+ORDER BY session_name asc;
+
+-- name: CreateSession :one
+INSERT INTO sessions (
+    user_id, session_type, session_name, date, location
+) VALUES (
+    $1, $2, $3, $4, $5
+)
+RETURNING *;
+
+-- name: UpdateSession :exec
+UPDATE sessions
+    SET user_id = $2,
+    session_type = $3,
+    session_name = $4,
+    date = $5,
+    location = $6
+WHERE session_id = $1;
+
+-- name: DeleteSession :exec
+DELETE FROM sessions
+WHERE session_id = $1;
+
+-- name: GetSessionPerformance :one
+SELECT * from session_performances
+WHERE session_performance_id = $1 LIMIT 1;
+
+-- name: ListSessionPerformance :many
+SELECT * from session_performances
+ORDER BY session_id;
+
+-- name: CreateSessionPerformance :one
+INSERT INTO session_performances (
+    session_id, player_performance_id
+) VALUES (
+    $1, $2
+)
+RETURNING *;
+
+-- name: UpdateSessionPerformance :exec
+UPDATE session_performances
+    SET session_id = $2,
+    player_performance_id = $3
+WHERE session_performance_id = $1;
+
+-- name: DeleteSessionPerformance :exec
+DELETE FROM session_performances
+WHERE session_performance_id = $1;
+
+-- name: GetSessionsByOwner :many
+SELECT * from sessions
+WHERE user_id = $1;
+
+-- name: GetPerformancesBySession :many
+SELECT 
+    p.player_id,
+    p.date,
+    d.drill_id,
+    d.drill_name,
+    attempts,
+    successful
+FROM player_performances as p
+JOIN drills as d on d.drill_id = p.drill_id
+JOIN session_performances as sp on sp.player_performance_id = p.player_performance_id
+WHERE sp.session_id = $1;
+
+-- name: GetSessionByPerformance :one
+SELECT 
+    sessions.session_id,
+    session_type,
+    session_name,
+    location,
+    sessions.date,
+    sessions.user_id
+from sessions
+JOIN session_performances as sp on sp.session_id = sessions.session_id
+WHERE sp.player_performance_id = $1;
+
+-- name: GetGoalsByPlayer :many
+SELECT 
+    g.goal_id,
+    g.goal_name,
+    g.goal_type,
+    pg.current_value,
+    pg.goal_value
+FROM player_goals as pg
+JOIN goals as g on g.goal_id = pg.goal_id
+WHERE pg.player_id = $1;
+
+
