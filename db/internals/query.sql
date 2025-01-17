@@ -31,7 +31,7 @@ WHERE user_id = $1;
 SELECT * from player_performances
 WHERE player_performance_id = $1 LIMIT 1;
 
--- name: ListPerformance :many
+-- name: ListPerformances :many
 SELECT * from player_performances
 ORDER BY date desc;
 
@@ -197,7 +197,7 @@ WHERE session_id = $1;
 SELECT * from session_performances
 WHERE session_performance_id = $1 LIMIT 1;
 
--- name: ListSessionPerformance :many
+-- name: ListSessionPerformances :many
 SELECT * from session_performances
 ORDER BY session_id;
 

@@ -141,11 +141,11 @@ RETURNING session_id, session_type, date, location, user_id, session_name
 `
 
 type CreateSessionParams struct {
-	UserID      uuid.UUID          `json:"userId"`
-	SessionType string             `json:"sessionType"`
-	SessionName string             `json:"sessionName"`
-	Date        pgtype.Timestamptz `json:"date"`
-	Location    pgtype.Text        `json:"location"`
+	UserID      uuid.UUID   `json:"userId"`
+	SessionType string      `json:"sessionType"`
+	SessionName string      `json:"sessionName"`
+	Date        pgtype.Date `json:"date"`
+	Location    pgtype.Text `json:"location"`
 }
 
 func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error) {
@@ -589,12 +589,12 @@ WHERE sp.player_performance_id = $1
 `
 
 type GetSessionByPerformanceRow struct {
-	SessionID   uuid.UUID          `json:"sessionId"`
-	SessionType string             `json:"sessionType"`
-	SessionName string             `json:"sessionName"`
-	Location    pgtype.Text        `json:"location"`
-	Date        pgtype.Timestamptz `json:"date"`
-	UserID      uuid.UUID          `json:"userId"`
+	SessionID   uuid.UUID   `json:"sessionId"`
+	SessionType string      `json:"sessionType"`
+	SessionName string      `json:"sessionName"`
+	Location    pgtype.Text `json:"location"`
+	Date        pgtype.Date `json:"date"`
+	UserID      uuid.UUID   `json:"userId"`
 }
 
 func (q *Queries) GetSessionByPerformance(ctx context.Context, playerPerformanceID uuid.UUID) (GetSessionByPerformanceRow, error) {
@@ -729,13 +729,13 @@ func (q *Queries) ListGoals(ctx context.Context) ([]Goal, error) {
 	return items, nil
 }
 
-const listPerformance = `-- name: ListPerformance :many
+const listPerformances = `-- name: ListPerformances :many
 SELECT player_performance_id, player_id, drill_id, date, attempts, successful from player_performances
 ORDER BY date desc
 `
 
-func (q *Queries) ListPerformance(ctx context.Context) ([]PlayerPerformance, error) {
-	rows, err := q.db.Query(ctx, listPerformance)
+func (q *Queries) ListPerformances(ctx context.Context) ([]PlayerPerformance, error) {
+	rows, err := q.db.Query(ctx, listPerformances)
 	if err != nil {
 		return nil, err
 	}
@@ -792,13 +792,13 @@ func (q *Queries) ListPlayerGoals(ctx context.Context) ([]PlayerGoal, error) {
 	return items, nil
 }
 
-const listSessionPerformance = `-- name: ListSessionPerformance :many
+const listSessionPerformances = `-- name: ListSessionPerformances :many
 SELECT session_performance_id, session_id, player_performance_id from session_performances
 ORDER BY session_id
 `
 
-func (q *Queries) ListSessionPerformance(ctx context.Context) ([]SessionPerformance, error) {
-	rows, err := q.db.Query(ctx, listSessionPerformance)
+func (q *Queries) ListSessionPerformances(ctx context.Context) ([]SessionPerformance, error) {
+	rows, err := q.db.Query(ctx, listSessionPerformances)
 	if err != nil {
 		return nil, err
 	}
@@ -994,12 +994,12 @@ WHERE session_id = $1
 `
 
 type UpdateSessionParams struct {
-	SessionID   uuid.UUID          `json:"sessionId"`
-	UserID      uuid.UUID          `json:"userId"`
-	SessionType string             `json:"sessionType"`
-	SessionName string             `json:"sessionName"`
-	Date        pgtype.Timestamptz `json:"date"`
-	Location    pgtype.Text        `json:"location"`
+	SessionID   uuid.UUID   `json:"sessionId"`
+	UserID      uuid.UUID   `json:"userId"`
+	SessionType string      `json:"sessionType"`
+	SessionName string      `json:"sessionName"`
+	Date        pgtype.Date `json:"date"`
+	Location    pgtype.Text `json:"location"`
 }
 
 func (q *Queries) UpdateSession(ctx context.Context, arg UpdateSessionParams) error {

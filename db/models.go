@@ -43,12 +43,12 @@ type PlayerPerformance struct {
 
 // stores sessions for player workouts
 type Session struct {
-	SessionID   uuid.UUID          `json:"sessionId"`
-	SessionType string             `json:"sessionType"`
-	Date        pgtype.Timestamptz `json:"date"`
-	Location    pgtype.Text        `json:"location"`
-	UserID      uuid.UUID          `json:"userId"`
-	SessionName string             `json:"sessionName"`
+	SessionID   uuid.UUID   `json:"sessionId"`
+	SessionType string      `json:"sessionType"`
+	Date        pgtype.Date `json:"date"`
+	Location    pgtype.Text `json:"location"`
+	UserID      uuid.UUID   `json:"userId"`
+	SessionName string      `json:"sessionName"`
 }
 
 // tracks performances on a session level

@@ -119,7 +119,7 @@ COMMENT ON TABLE public.session_performances IS 'tracks performances on a sessio
 CREATE TABLE public.sessions (
     session_id uuid DEFAULT gen_random_uuid() NOT NULL,
     session_type character varying(25) NOT NULL,
-    date timestamp with time zone NOT NULL,
+    date date NOT NULL,
     location character varying(50),
     user_id uuid NOT NULL,
     session_name character varying(50) NOT NULL
