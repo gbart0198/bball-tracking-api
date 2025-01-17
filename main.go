@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"log"
@@ -12,6 +13,8 @@ import (
 )
 
 func main() {
+    ctx := context.Background()
+
 	listenAddr := flag.String("listenAddr", ":8080", "server listen address")
 	flag.Parse()
 
@@ -23,17 +26,19 @@ func main() {
 	dbUser := os.Getenv("DB_USER")
 	dbPassword := os.Getenv("DB_PASSWORD")
 	dbName := os.Getenv("DB_NAME")
+    dbPort := os.Getenv("DB_PORT")
 
-	if dbHost == "" || dbUser == "" || dbPassword == "" || dbName == "" {
+	if dbHost == "" || dbUser == "" || dbPassword == "" || dbName == "" || dbPort == "" {
 		log.Fatal("Missing required environment variables.")
 	}
 
-	connStr := fmt.Sprintf("Data Source=%s;Database=%s;Integrated Security=false;User ID=%s;Password=%s;", dbHost, dbName, dbUser, dbPassword)
+    connStr := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable", dbHost, dbUser, dbPassword, dbName, dbPort)
 
-	storage := storage.NewMSSQLStorage(connStr)
+	storage := storage.NewPostgreSqlStorage(ctx)
+    defer storage.Close()
 
 	fmt.Println("Listening on port ", *listenAddr)
 	server := api.NewServer(*listenAddr, storage)
-	storage.Connect()
+	storage.Connect(connStr)
 	log.Fatal(server.Start())
 }
