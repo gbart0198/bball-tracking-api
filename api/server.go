@@ -75,5 +75,9 @@ func (s *Server) Start() error {
 	router.HandleFunc("POST /session-performance", s.handleUpdateSessionPerformance)
 	router.HandleFunc("DELETE /session-performance/{sessionPerformanceId}", s.handleDeleteSessionPerformance)
 
-	return http.ListenAndServe(s.listenAddr, router)
+    apiRoot := http.NewServeMux()
+
+    apiRoot.Handle("/api/", http.StripPrefix("/api", router))
+
+	return http.ListenAndServe(s.listenAddr, apiRoot)
 }

@@ -18,14 +18,16 @@ func (s *Server) handleGetUser(w http.ResponseWriter, r *http.Request) {
 	userID := r.PathValue("userId")
 	user := s.store.GetUser(userID)
 
-    w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173")
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(user)
 }
 
 func (s *Server) handleListUsers(w http.ResponseWriter, r *http.Request) {
 	users := s.store.ListUsers()
 
-    w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173")
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(users)
 }
 
@@ -36,7 +38,7 @@ func (s *Server) handleCreateUser(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 	createdUser := s.store.CreateUser(user)
-    w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(createdUser)
 }
 
@@ -63,14 +65,14 @@ func (s *Server) handleGetDrill(w http.ResponseWriter, r *http.Request) {
 	drillID := r.PathValue("drillId")
 	drill := s.store.GetDrill(drillID)
 
-    w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(drill)
 }
 
 func (s *Server) handleListDrills(w http.ResponseWriter, r *http.Request) {
 	drills := s.store.ListDrills()
 
-    w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(drills)
 }
 
@@ -81,7 +83,7 @@ func (s *Server) handleCreateDrill(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 	createdDrill := s.store.CreateDrill(drill)
-    w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(createdDrill)
 }
 
@@ -108,14 +110,14 @@ func (s *Server) handleGetGoal(w http.ResponseWriter, r *http.Request) {
 	goalID := r.PathValue("goalId")
 	goal := s.store.GetGoal(goalID)
 
-    w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(goal)
 }
 
 func (s *Server) handleListGoals(w http.ResponseWriter, r *http.Request) {
 	goals := s.store.ListGoals()
 
-    w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(goals)
 }
 
@@ -126,7 +128,7 @@ func (s *Server) handleCreateGoal(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 	createdGoal := s.store.CreateGoal(goal)
-    w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(createdGoal)
 }
 
@@ -153,14 +155,14 @@ func (s *Server) handleGetPlayerPerformance(w http.ResponseWriter, r *http.Reque
 	performanceID := r.PathValue("performanceId")
 	performance := s.store.GetPlayerPerformance(performanceID)
 
-    w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(performance)
 }
 
 func (s *Server) handleListPlayerPerformances(w http.ResponseWriter, r *http.Request) {
 	performances := s.store.ListPlayerPerformances()
 
-    w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(performances)
 }
 
@@ -173,7 +175,7 @@ func (s *Server) handleCreatePlayerPerformance(w http.ResponseWriter, r *http.Re
 	}
 	createdPerformance := s.store.CreatePlayerPerformance(performance)
 	w.WriteHeader(http.StatusCreated)
-    w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(createdPerformance)
 }
 
@@ -197,7 +199,7 @@ func (s *Server) handleGetPerformancesByPlayer(w http.ResponseWriter, r *http.Re
 	userID := r.PathValue("userId")
 	performances := s.store.GetPerformancesByPlayer(userID)
 
-    w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(performances)
 }
 
@@ -205,7 +207,7 @@ func (s *Server) handleGetPerformancesByDrill(w http.ResponseWriter, r *http.Req
 	drillID := r.PathValue("drillId")
 	performances := s.store.GetPerformancesByDrill(drillID)
 
-    w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(performances)
 }
 
@@ -213,7 +215,7 @@ func (s *Server) handleGetPerformancesBySession(w http.ResponseWriter, r *http.R
 	sessionID := r.PathValue("sessionId")
 	performances := s.store.GetPerformancesBySession(sessionID)
 
-    w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(performances)
 }
 
@@ -226,14 +228,14 @@ func (s *Server) handleGetSession(w http.ResponseWriter, r *http.Request) {
 	sessionID := r.PathValue("sessionId")
 	session := s.store.GetSession(sessionID)
 
-    w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(session)
 }
 
 func (s *Server) handleListSessions(w http.ResponseWriter, r *http.Request) {
 	sessions := s.store.ListSessions()
 
-    w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(sessions)
 }
 
@@ -246,7 +248,7 @@ func (s *Server) handleCreateSession(w http.ResponseWriter, r *http.Request) {
 	}
 	createdSession := s.store.CreateSession(session)
 	w.WriteHeader(http.StatusCreated)
-    w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(createdSession)
 }
 
@@ -270,7 +272,7 @@ func (s *Server) handleGetSessionsByOwner(w http.ResponseWriter, r *http.Request
 	userID := r.PathValue("userId")
 	sessions := s.store.GetSessionsByOwner(userID)
 
-    w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(sessions)
 }
 
@@ -278,7 +280,7 @@ func (s *Server) handleGetSessionByPerformance(w http.ResponseWriter, r *http.Re
 	performanceID := r.PathValue("performanceId")
 	session := s.store.GetSessionByPerformance(performanceID)
 
-    w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(session)
 }
 
@@ -291,14 +293,14 @@ func (s *Server) handleGetPlayerGoal(w http.ResponseWriter, r *http.Request) {
 	goalID := r.PathValue("playerGoalId")
 	playerGoal := s.store.GetPlayerGoal(goalID)
 
-    w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(playerGoal)
 }
 
 func (s *Server) handleListPlayerGoals(w http.ResponseWriter, r *http.Request) {
 	playerGoals := s.store.ListPlayerGoals()
 
-    w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(playerGoals)
 }
 
@@ -311,7 +313,7 @@ func (s *Server) handleCreatePlayerGoal(w http.ResponseWriter, r *http.Request) 
 	}
 	createdPlayerGoal := s.store.CreatePlayerGoal(playerGoal)
 	w.WriteHeader(http.StatusCreated)
-    w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(createdPlayerGoal)
 }
 
@@ -335,7 +337,7 @@ func (s *Server) handleGetGoalsByPlayer(w http.ResponseWriter, r *http.Request) 
 	userID := r.PathValue("userId")
 	goals := s.store.GetGoalsByPlayer(userID)
 
-    w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(goals)
 }
 
@@ -348,14 +350,14 @@ func (s *Server) handleGetSessionPerformance(w http.ResponseWriter, r *http.Requ
 	performanceID := r.PathValue("sessionPerformanceId")
 	sessionPerformance := s.store.GetSessionPerformance(performanceID)
 
-    w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(sessionPerformance)
 }
 
 func (s *Server) handleListSessionPerformances(w http.ResponseWriter, r *http.Request) {
 	sessionPerformances := s.store.ListSessionPerformances()
 
-    w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(sessionPerformances)
 }
 
@@ -368,7 +370,7 @@ func (s *Server) handleCreateSessionPerformance(w http.ResponseWriter, r *http.R
 	}
 	createdSessionPerformance := s.store.CreateSessionPerformance(sessionPerformance)
 	w.WriteHeader(http.StatusCreated)
-    w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(createdSessionPerformance)
 }
 
