@@ -1,19 +1,21 @@
 package api
 
 import (
-	"github.com/gbart0198/bball-tracker-api/storage"
 	"net/http"
+
+	"github.com/gbart0198/bball-tracker-api/storage"
+	"github.com/rs/cors"
 )
 
 type Server struct {
 	listenAddr string
-	store      storage.Storage
+	repo       storage.Storage
 }
 
-func NewServer(listenAddr string, store storage.Storage) *Server {
+func NewServer(listenAddr string, repo storage.Storage) *Server {
 	return &Server{
 		listenAddr: listenAddr,
-		store:      store,
+		repo:       repo,
 	}
 }
 
@@ -75,9 +77,14 @@ func (s *Server) Start() error {
 	router.HandleFunc("POST /session-performance", s.handleUpdateSessionPerformance)
 	router.HandleFunc("DELETE /session-performance/{sessionPerformanceId}", s.handleDeleteSessionPerformance)
 
-    apiRoot := http.NewServeMux()
+	apiRoot := http.NewServeMux()
 
-    apiRoot.Handle("/api/", http.StripPrefix("/api", router))
+	apiRoot.Handle("/api/", http.StripPrefix("/api", router))
 
-	return http.ListenAndServe(s.listenAddr, apiRoot)
+	handler := cors.New(cors.Options{
+		AllowedOrigins: []string{"http://localhost:5173"},
+		Debug:          true,
+	}).Handler(apiRoot)
+
+	return http.ListenAndServe(s.listenAddr, handler)
 }

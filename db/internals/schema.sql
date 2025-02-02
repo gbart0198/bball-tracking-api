@@ -2,12 +2,13 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 14.15 (Ubuntu 14.15-0ubuntu0.22.04.1)
--- Dumped by pg_dump version 14.15 (Ubuntu 14.15-0ubuntu0.22.04.1)
+-- Dumped from database version 12.22 (Debian 12.22-1.pgdg120+1)
+-- Dumped by pg_dump version 17.2
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
+SET transaction_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SELECT pg_catalog.set_config('search_path', '', false);
@@ -16,50 +17,66 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
+--
+-- Name: public; Type: SCHEMA; Schema: -; Owner: admin
+--
+
+-- *not* creating schema, since initdb creates it
+
+
+ALTER SCHEMA public OWNER TO admin;
+
+--
+-- Name: pgcrypto; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA public;
+
+
+--
+-- Name: EXTENSION pgcrypto; Type: COMMENT; Schema: -; Owner: 
+--
+
+COMMENT ON EXTENSION pgcrypto IS 'cryptographic functions';
+
+
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
 
 --
--- Name: drills; Type: TABLE; Schema: public; Owner: postgres
+-- Name: drills; Type: TABLE; Schema: public; Owner: admin
 --
 
 CREATE TABLE public.drills (
-    drill_id uuid DEFAULT gen_random_uuid() NOT NULL,
-    drill_name character varying(50) NOT NULL,
+    drill_id uuid DEFAULT public.gen_random_uuid() NOT NULL,
+    drill_name character(50) NOT NULL,
     category character varying(50),
-    difficulty character(25)
+    difficulty character varying(25)
 );
 
 
-ALTER TABLE public.drills OWNER TO postgres;
+ALTER TABLE public.drills OWNER TO admin;
 
 --
--- Name: goals; Type: TABLE; Schema: public; Owner: postgres
+-- Name: goals; Type: TABLE; Schema: public; Owner: admin
 --
 
 CREATE TABLE public.goals (
-    goal_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    goal_id uuid DEFAULT public.gen_random_uuid() NOT NULL,
     goal_type character varying(50) NOT NULL,
     goal_name character varying(50) NOT NULL
 );
 
 
-ALTER TABLE public.goals OWNER TO postgres;
+ALTER TABLE public.goals OWNER TO admin;
 
 --
--- Name: TABLE goals; Type: COMMENT; Schema: public; Owner: postgres
---
-
-COMMENT ON TABLE public.goals IS 'lookup table for different types of goals';
-
-
---
--- Name: player_goals; Type: TABLE; Schema: public; Owner: postgres
+-- Name: player_goals; Type: TABLE; Schema: public; Owner: admin
 --
 
 CREATE TABLE public.player_goals (
-    player_goal_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    player_goal_id uuid DEFAULT public.gen_random_uuid() NOT NULL,
     player_id uuid NOT NULL,
     goal_id uuid NOT NULL,
     current_value integer,
@@ -67,21 +84,14 @@ CREATE TABLE public.player_goals (
 );
 
 
-ALTER TABLE public.player_goals OWNER TO postgres;
+ALTER TABLE public.player_goals OWNER TO admin;
 
 --
--- Name: TABLE player_goals; Type: COMMENT; Schema: public; Owner: postgres
---
-
-COMMENT ON TABLE public.player_goals IS 'tracks players goals';
-
-
---
--- Name: player_performances; Type: TABLE; Schema: public; Owner: postgres
+-- Name: player_performances; Type: TABLE; Schema: public; Owner: admin
 --
 
 CREATE TABLE public.player_performances (
-    player_performance_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    player_performance_id uuid DEFAULT public.gen_random_uuid() NOT NULL,
     player_id uuid NOT NULL,
     drill_id uuid NOT NULL,
     date date NOT NULL,
@@ -90,34 +100,27 @@ CREATE TABLE public.player_performances (
 );
 
 
-ALTER TABLE public.player_performances OWNER TO postgres;
+ALTER TABLE public.player_performances OWNER TO admin;
 
 --
--- Name: session_performances; Type: TABLE; Schema: public; Owner: postgres
+-- Name: session_performances; Type: TABLE; Schema: public; Owner: admin
 --
 
 CREATE TABLE public.session_performances (
-    session_performance_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    session_performance_id uuid DEFAULT public.gen_random_uuid() NOT NULL,
     session_id uuid NOT NULL,
     player_performance_id uuid NOT NULL
 );
 
 
-ALTER TABLE public.session_performances OWNER TO postgres;
+ALTER TABLE public.session_performances OWNER TO admin;
 
 --
--- Name: TABLE session_performances; Type: COMMENT; Schema: public; Owner: postgres
---
-
-COMMENT ON TABLE public.session_performances IS 'tracks performances on a session level';
-
-
---
--- Name: sessions; Type: TABLE; Schema: public; Owner: postgres
+-- Name: sessions; Type: TABLE; Schema: public; Owner: admin
 --
 
 CREATE TABLE public.sessions (
-    session_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    session_id uuid DEFAULT public.gen_random_uuid() NOT NULL,
     session_type character varying(25) NOT NULL,
     date date NOT NULL,
     location character varying(50),
@@ -126,33 +129,26 @@ CREATE TABLE public.sessions (
 );
 
 
-ALTER TABLE public.sessions OWNER TO postgres;
+ALTER TABLE public.sessions OWNER TO admin;
 
 --
--- Name: TABLE sessions; Type: COMMENT; Schema: public; Owner: postgres
---
-
-COMMENT ON TABLE public.sessions IS 'stores sessions for player workouts';
-
-
---
--- Name: users; Type: TABLE; Schema: public; Owner: postgres
+-- Name: users; Type: TABLE; Schema: public; Owner: admin
 --
 
 CREATE TABLE public.users (
-    user_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    user_id uuid DEFAULT public.gen_random_uuid() NOT NULL,
     username character varying(100) NOT NULL,
     passhash character varying(500) NOT NULL,
-    email character varying(100) NOT NULL,
-    firstname character varying,
-    lastname character varying
+    email character varying(50) NOT NULL,
+    firstname character varying(25),
+    lastname character varying(25)
 );
 
 
-ALTER TABLE public.users OWNER TO postgres;
+ALTER TABLE public.users OWNER TO admin;
 
 --
--- Name: drills drills_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: drills drills_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.drills
@@ -160,23 +156,23 @@ ALTER TABLE ONLY public.drills
 
 
 --
--- Name: goals goal_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: goals goals_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.goals
-    ADD CONSTRAINT goal_pkey PRIMARY KEY (goal_id);
+    ADD CONSTRAINT goals_pkey PRIMARY KEY (goal_id);
 
 
 --
--- Name: player_goals player_goal_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: player_goals player_goals_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.player_goals
-    ADD CONSTRAINT player_goal_pkey PRIMARY KEY (player_goal_id);
+    ADD CONSTRAINT player_goals_pkey PRIMARY KEY (player_goal_id);
 
 
 --
--- Name: player_performances player_performances_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: player_performances player_performances_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.player_performances
@@ -184,23 +180,23 @@ ALTER TABLE ONLY public.player_performances
 
 
 --
--- Name: session_performances session_performance_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: session_performances session_performances_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.session_performances
-    ADD CONSTRAINT session_performance_pkey PRIMARY KEY (session_performance_id);
+    ADD CONSTRAINT session_performances_pkey PRIMARY KEY (session_performance_id);
 
 
 --
--- Name: sessions session_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: sessions sessions_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.sessions
-    ADD CONSTRAINT session_pkey PRIMARY KEY (session_id);
+    ADD CONSTRAINT sessions_pkey PRIMARY KEY (session_id);
 
 
 --
--- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.users
@@ -208,59 +204,67 @@ ALTER TABLE ONLY public.users
 
 
 --
--- Name: player_performances drill; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: player_performances drill_fk; Type: FK CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.player_performances
-    ADD CONSTRAINT drill FOREIGN KEY (drill_id) REFERENCES public.drills(drill_id) ON DELETE CASCADE;
+    ADD CONSTRAINT drill_fk FOREIGN KEY (drill_id) REFERENCES public.drills(drill_id);
 
 
 --
--- Name: player_goals goal; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.player_goals
-    ADD CONSTRAINT goal FOREIGN KEY (goal_id) REFERENCES public.goals(goal_id);
-
-
---
--- Name: player_performances player; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.player_performances
-    ADD CONSTRAINT player FOREIGN KEY (player_id) REFERENCES public.users(user_id) ON DELETE CASCADE;
-
-
---
--- Name: player_goals player; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.player_goals
-    ADD CONSTRAINT player FOREIGN KEY (player_id) REFERENCES public.users(user_id);
-
-
---
--- Name: session_performances player_performance; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: session_performances fk_player_performance; Type: FK CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.session_performances
-    ADD CONSTRAINT player_performance FOREIGN KEY (player_performance_id) REFERENCES public.player_performances(player_performance_id);
+    ADD CONSTRAINT fk_player_performance FOREIGN KEY (player_performance_id) REFERENCES public.player_performances(player_performance_id);
 
 
 --
--- Name: session_performances session; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: session_performances fk_session; Type: FK CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.session_performances
-    ADD CONSTRAINT session FOREIGN KEY (session_id) REFERENCES public.sessions(session_id);
+    ADD CONSTRAINT fk_session FOREIGN KEY (session_id) REFERENCES public.sessions(session_id);
 
 
 --
--- Name: sessions session_owner; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: player_goals goal_fk; Type: FK CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.player_goals
+    ADD CONSTRAINT goal_fk FOREIGN KEY (goal_id) REFERENCES public.goals(goal_id);
+
+
+--
+-- Name: sessions user_fk; Type: FK CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.sessions
-    ADD CONSTRAINT session_owner FOREIGN KEY (user_id) REFERENCES public.users(user_id) ON DELETE CASCADE;
+    ADD CONSTRAINT user_fk FOREIGN KEY (user_id) REFERENCES public.users(user_id);
+
+
+--
+-- Name: player_performances user_fk; Type: FK CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.player_performances
+    ADD CONSTRAINT user_fk FOREIGN KEY (player_id) REFERENCES public.users(user_id);
+
+
+--
+-- Name: player_goals user_fk; Type: FK CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.player_goals
+    ADD CONSTRAINT user_fk FOREIGN KEY (player_id) REFERENCES public.users(user_id);
+
+
+--
+-- Name: SCHEMA public; Type: ACL; Schema: -; Owner: admin
+--
+
+REVOKE USAGE ON SCHEMA public FROM PUBLIC;
+GRANT ALL ON SCHEMA public TO PUBLIC;
 
 
 --

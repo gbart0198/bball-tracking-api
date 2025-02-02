@@ -34,11 +34,10 @@ func main() {
 
 	connStr := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable", dbHost, dbUser, dbPassword, dbName, dbPort)
 
-	storage := storage.NewPostgreSqlStorage(ctx)
+	storage := storage.NewPostgreSqlStorage(ctx, connStr)
 	defer storage.Close()
 
 	fmt.Println("Listening on port ", *listenAddr)
 	server := api.NewServer(*listenAddr, storage)
-	storage.Connect(connStr)
 	log.Fatal(server.Start())
 }

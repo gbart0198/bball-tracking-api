@@ -3,38 +3,40 @@ package storage
 import (
 	"context"
 	"log"
+	"log/slog"
 
 	"github.com/gbart0198/bball-tracker-api/db"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/lib/pq"
 )
 
 type PostgreSqlStorage struct {
 	queries *db.Queries
 	ctx     context.Context
-	conn    *pgx.Conn
+	pool    *pgxpool.Pool
 }
 
-func NewPostgreSqlStorage(ctx context.Context) *PostgreSqlStorage {
-	return &PostgreSqlStorage{
-		ctx: ctx,
-	}
-}
-
-func (store *PostgreSqlStorage) Connect(connStr string) {
-	conn, err := pgx.Connect(store.ctx, connStr)
+func NewPostgreSqlStorage(ctx context.Context, connStr string) *PostgreSqlStorage {
+	config, err := pgxpool.ParseConfig(connStr)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Unable to parse config: %v\n", err)
 	}
-	store.conn = conn
-	queries := db.New(store.conn)
-	store.queries = queries
-	log.Println("DB connected")
+	pool, err := pgxpool.NewWithConfig(ctx, config)
+	if err != nil {
+		log.Fatalf("Unable to connect to database: %v\n", err)
+	}
+	queries := db.New(pool)
+	slog.Info("DB connected")
+	return &PostgreSqlStorage{
+		ctx:     ctx,
+		queries: queries,
+		pool:    pool,
+	}
 }
 
 func (store *PostgreSqlStorage) Close() {
-	store.conn.Close(store.ctx)
+	store.pool.Close()
 }
 
 /*
