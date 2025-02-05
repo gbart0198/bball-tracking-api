@@ -421,3 +421,50 @@ func (store *PostgreSqlStorage) DeleteSessionPerformance(sessionPerformanceID st
 		log.Fatal(err)
 	}
 }
+
+/*
+* ------------------------------------------------------------------
+* Goal Category Routes
+* ------------------------------------------------------------------
+ */
+
+func (store *PostgreSqlStorage) GetGoalCategory(goalCategoryID string) *db.GoalCategory {
+	goalCategory, err := store.queries.GetGoalCategory(store.ctx, uuid.MustParse(goalCategoryID))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return &goalCategory
+}
+
+func (store *PostgreSqlStorage) ListGoalCategories() []db.GoalCategory {
+	goalCategories, err := store.queries.GetGoalCategories(store.ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return goalCategories
+}
+
+func (store *PostgreSqlStorage) CreateGoalCategory(goalCategoryName string) *db.GoalCategory {
+	createdGoalCategory, err := store.queries.CreateGoalCategory(store.ctx, goalCategoryName)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return &createdGoalCategory
+}
+
+func (store *PostgreSqlStorage) UpdateGoalCategory(params db.UpdateGoalCategoryParams) {
+	err := store.queries.UpdateGoalCategory(store.ctx, params)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func (store *PostgreSqlStorage) DeleteGoalCategory(goalCategoryID string) {
+	err := store.queries.DeleteGoalCategory(store.ctx, uuid.MustParse(goalCategoryID))
+	if err != nil {
+		log.Fatal(err)
+	}
+}

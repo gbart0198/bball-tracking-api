@@ -22,12 +22,20 @@ type Goal struct {
 	GoalName string    `json:"goalName"`
 }
 
+type GoalCategory struct {
+	GoalCategoryID uuid.UUID `json:"goalCategoryId"`
+	Category       string    `json:"category"`
+}
+
 type PlayerGoal struct {
-	PlayerGoalID uuid.UUID   `json:"playerGoalId"`
-	PlayerID     uuid.UUID   `json:"playerId"`
-	GoalID       uuid.UUID   `json:"goalId"`
-	CurrentValue pgtype.Int4 `json:"currentValue"`
-	GoalValue    int32       `json:"goalValue"`
+	PlayerGoalID    uuid.UUID   `json:"playerGoalId"`
+	PlayerID        uuid.UUID   `json:"playerId"`
+	DrillID         uuid.UUID   `json:"drillId"`
+	CurrentValue    pgtype.Int4 `json:"currentValue"`
+	GoalValue       int32       `json:"goalValue"`
+	GoalCategoryID  uuid.UUID   `json:"goalCategoryId"`
+	GoalName        string      `json:"goalName"`
+	GoalDescription pgtype.Text `json:"goalDescription"`
 }
 
 type PlayerPerformance struct {

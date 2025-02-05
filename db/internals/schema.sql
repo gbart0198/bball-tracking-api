@@ -59,6 +59,18 @@ CREATE TABLE public.drills (
 ALTER TABLE public.drills OWNER TO admin;
 
 --
+-- Name: goal_categories; Type: TABLE; Schema: public; Owner: admin
+--
+
+CREATE TABLE public.goal_categories (
+    goal_category_id uuid DEFAULT public.gen_random_uuid() NOT NULL,
+    category character varying(50) NOT NULL
+);
+
+
+ALTER TABLE public.goal_categories OWNER TO admin;
+
+--
 -- Name: goals; Type: TABLE; Schema: public; Owner: admin
 --
 
@@ -78,9 +90,12 @@ ALTER TABLE public.goals OWNER TO admin;
 CREATE TABLE public.player_goals (
     player_goal_id uuid DEFAULT public.gen_random_uuid() NOT NULL,
     player_id uuid NOT NULL,
-    goal_id uuid NOT NULL,
+    drill_id uuid NOT NULL,
     current_value integer,
-    goal_value integer NOT NULL
+    goal_value integer NOT NULL,
+    goal_category_id uuid NOT NULL,
+    goal_name character varying(50) NOT NULL,
+    goal_description character varying(50)
 );
 
 
@@ -156,6 +171,14 @@ ALTER TABLE ONLY public.drills
 
 
 --
+-- Name: goal_categories goal_categories_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.goal_categories
+    ADD CONSTRAINT goal_categories_pkey PRIMARY KEY (goal_category_id);
+
+
+--
 -- Name: goals goals_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
@@ -212,6 +235,14 @@ ALTER TABLE ONLY public.player_performances
 
 
 --
+-- Name: player_goals drill_fk; Type: FK CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.player_goals
+    ADD CONSTRAINT drill_fk FOREIGN KEY (drill_id) REFERENCES public.drills(drill_id) NOT VALID;
+
+
+--
 -- Name: session_performances fk_player_performance; Type: FK CONSTRAINT; Schema: public; Owner: admin
 --
 
@@ -228,11 +259,11 @@ ALTER TABLE ONLY public.session_performances
 
 
 --
--- Name: player_goals goal_fk; Type: FK CONSTRAINT; Schema: public; Owner: admin
+-- Name: player_goals goal_category_fk; Type: FK CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.player_goals
-    ADD CONSTRAINT goal_fk FOREIGN KEY (goal_id) REFERENCES public.goals(goal_id);
+    ADD CONSTRAINT goal_category_fk FOREIGN KEY (goal_category_id) REFERENCES public.goal_categories(goal_category_id);
 
 
 --

@@ -77,6 +77,13 @@ func (s *Server) Start() error {
 	router.HandleFunc("POST /session-performance", s.handleUpdateSessionPerformance)
 	router.HandleFunc("DELETE /session-performance/{sessionPerformanceId}", s.handleDeleteSessionPerformance)
 
+	// Goal Category Routes
+	router.HandleFunc("GET /goal-category/{goalCategoryId}", s.handleGetGoalCategory)
+	router.HandleFunc("GET /goal-category", s.handleGetGoalCategories)
+	router.HandleFunc("PUT /goal-category/{goalCategoryId}", s.handleCreateGoalCategory)
+	router.HandleFunc("POST /goal-category", s.handleUpdateGoalCategory)
+	router.HandleFunc("DELETE /goal-category/{goalCategoryId}", s.handleDeleteGoalCategory)
+
 	apiRoot := http.NewServeMux()
 
 	apiRoot.Handle("/api/", http.StripPrefix("/api", router))

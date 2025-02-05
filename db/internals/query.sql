@@ -142,22 +142,25 @@ WHERE player_goal_id = $1 LIMIT 1;
 
 -- name: ListPlayerGoals :many
 SELECT * from player_goals
-ORDER BY goal_id;
+ORDER BY player_goal_id;
 
 -- name: CreatePlayerGoal :one
 INSERT INTO player_goals (
-    player_id, goal_id, current_value, goal_value
+    player_id, drill_id, current_value, goal_value, goal_category_id, goal_name, goal_description
 ) VALUES (
-    $1, $2, $3, $4
+    $1, $2, $3, $4, $5, $6, $7
 )
 RETURNING *;
 
 -- name: UpdatePlayerGoal :exec
 UPDATE player_goals
     SET player_id = $2,
-    goal_id = $3,
+    drill_id = $3,
     current_value = $4,
-    goal_value = $5
+    goal_value = $5,
+    goal_category_id = $6,
+    goal_name = $7,
+    goal_description = $8
 WHERE player_goal_id = $1;
 
 -- name: DeletePlayerGoal :exec
@@ -250,13 +253,44 @@ WHERE sp.player_performance_id = $1;
 
 -- name: GetGoalsByPlayer :many
 SELECT 
-    g.goal_id,
-    g.goal_name,
-    g.goal_type,
+    pg.drill_id,
+    d.drill_name,
+    pg.goal_name,
+    pg.goal_description,
     pg.current_value,
-    pg.goal_value
+    pg.goal_value,
+    gc.category,
+    gc.goal_category_id
 FROM player_goals as pg
-JOIN goals as g on g.goal_id = pg.goal_id
+JOIN drills d on d.drill_id = pg.drill_id
+JOIN goal_categories gc on gc.goal_category_id = pg.goal_category_id
 WHERE pg.player_id = $1;
+
+
+-- name: GetGoalCategories :many
+SELECT * from goal_categories
+ORDER BY category asc;
+
+-- name: GetGoalCategory :one
+SELECT * from goal_categories
+WHERE goal_category_id = $1 LIMIT 1;
+
+-- name: CreateGoalCategory :one
+INSERT INTO goal_categories (
+    category
+) VALUES (
+    $1
+)
+RETURNING *;
+
+-- name: UpdateGoalCategory :exec
+UPDATE goal_categories
+    SET category = $2
+WHERE goal_category_id = $1;
+
+-- name: DeleteGoalCategory :exec
+DELETE FROM goal_categories
+WHERE goal_category_id = $1;
+
 
 

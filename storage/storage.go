@@ -60,4 +60,11 @@ type Storage interface {
     UpdateSessionPerformance(db.UpdateSessionPerformanceParams)
     DeleteSessionPerformance(string)
 
+    // Goal Category Routes
+    GetGoalCategory(string) *db.GoalCategory
+    ListGoalCategories() []db.GoalCategory
+    CreateGoalCategory(string) *db.GoalCategory
+    UpdateGoalCategory(db.UpdateGoalCategoryParams)
+    DeleteGoalCategory(string)
+
 }

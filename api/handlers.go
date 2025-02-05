@@ -387,3 +387,44 @@ func (s *Server) handleDeleteSessionPerformance(w http.ResponseWriter, r *http.R
 	s.repo.DeleteSessionPerformance(performanceID)
 	w.WriteHeader(http.StatusNoContent)
 }
+
+func (s *Server) handleGetGoalCategories(w http.ResponseWriter, r *http.Request) {
+	categories := s.repo.ListGoalCategories()
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(categories)
+}
+
+func (s *Server) handleGetGoalCategory(w http.ResponseWriter, r *http.Request) {
+	categoryId := r.PathValue("goalCategoryId")
+	categories := s.repo.GetGoalCategory(categoryId)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(categories)
+}
+
+func (s *Server) handleCreateGoalCategory(w http.ResponseWriter, r *http.Request) {
+	category := r.PathValue("goalCategoryId")
+	createdCategory := s.repo.CreateGoalCategory(category)
+	w.WriteHeader(http.StatusCreated)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(createdCategory)
+}
+
+func (s *Server) handleUpdateGoalCategory(w http.ResponseWriter, r *http.Request) {
+	var updateGoalCategoryParams db.UpdateGoalCategoryParams
+
+	err := json.NewDecoder(r.Body).Decode(&updateGoalCategoryParams)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	s.repo.UpdateGoalCategory(updateGoalCategoryParams)
+}
+
+func (s *Server) handleDeleteGoalCategory(w http.ResponseWriter, r *http.Request) {
+	categoryId := r.PathValue("categoryId")
+	s.repo.DeleteGoalCategory(categoryId)
+	w.WriteHeader(http.StatusNoContent)
+}

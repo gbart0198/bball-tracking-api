@@ -60,6 +60,22 @@ func (q *Queries) CreateGoal(ctx context.Context, arg CreateGoalParams) (Goal, e
 	return i, err
 }
 
+const createGoalCategory = `-- name: CreateGoalCategory :one
+INSERT INTO goal_categories (
+    category
+) VALUES (
+    $1
+)
+RETURNING goal_category_id, category
+`
+
+func (q *Queries) CreateGoalCategory(ctx context.Context, category string) (GoalCategory, error) {
+	row := q.db.QueryRow(ctx, createGoalCategory, category)
+	var i GoalCategory
+	err := row.Scan(&i.GoalCategoryID, &i.Category)
+	return i, err
+}
+
 const createPerformance = `-- name: CreatePerformance :one
 INSERT INTO player_performances (
     player_id, drill_id, date, attempts, successful
@@ -99,34 +115,43 @@ func (q *Queries) CreatePerformance(ctx context.Context, arg CreatePerformancePa
 
 const createPlayerGoal = `-- name: CreatePlayerGoal :one
 INSERT INTO player_goals (
-    player_id, goal_id, current_value, goal_value
+    player_id, drill_id, current_value, goal_value, goal_category_id, goal_name, goal_description
 ) VALUES (
-    $1, $2, $3, $4
+    $1, $2, $3, $4, $5, $6, $7
 )
-RETURNING player_goal_id, player_id, goal_id, current_value, goal_value
+RETURNING player_goal_id, player_id, drill_id, current_value, goal_value, goal_category_id, goal_name, goal_description
 `
 
 type CreatePlayerGoalParams struct {
-	PlayerID     uuid.UUID   `json:"playerId"`
-	GoalID       uuid.UUID   `json:"goalId"`
-	CurrentValue pgtype.Int4 `json:"currentValue"`
-	GoalValue    int32       `json:"goalValue"`
+	PlayerID        uuid.UUID   `json:"playerId"`
+	DrillID         uuid.UUID   `json:"drillId"`
+	CurrentValue    pgtype.Int4 `json:"currentValue"`
+	GoalValue       int32       `json:"goalValue"`
+	GoalCategoryID  uuid.UUID   `json:"goalCategoryId"`
+	GoalName        string      `json:"goalName"`
+	GoalDescription pgtype.Text `json:"goalDescription"`
 }
 
 func (q *Queries) CreatePlayerGoal(ctx context.Context, arg CreatePlayerGoalParams) (PlayerGoal, error) {
 	row := q.db.QueryRow(ctx, createPlayerGoal,
 		arg.PlayerID,
-		arg.GoalID,
+		arg.DrillID,
 		arg.CurrentValue,
 		arg.GoalValue,
+		arg.GoalCategoryID,
+		arg.GoalName,
+		arg.GoalDescription,
 	)
 	var i PlayerGoal
 	err := row.Scan(
 		&i.PlayerGoalID,
 		&i.PlayerID,
-		&i.GoalID,
+		&i.DrillID,
 		&i.CurrentValue,
 		&i.GoalValue,
+		&i.GoalCategoryID,
+		&i.GoalName,
+		&i.GoalDescription,
 	)
 	return i, err
 }
@@ -246,6 +271,16 @@ func (q *Queries) DeleteGoal(ctx context.Context, goalID uuid.UUID) error {
 	return err
 }
 
+const deleteGoalCategory = `-- name: DeleteGoalCategory :exec
+DELETE FROM goal_categories
+WHERE goal_category_id = $1
+`
+
+func (q *Queries) DeleteGoalCategory(ctx context.Context, goalCategoryID uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deleteGoalCategory, goalCategoryID)
+	return err
+}
+
 const deletePerformance = `-- name: DeletePerformance :exec
 DELETE FROM player_performances
 WHERE player_performance_id = $1
@@ -325,24 +360,68 @@ func (q *Queries) GetGoal(ctx context.Context, goalID uuid.UUID) (Goal, error) {
 	return i, err
 }
 
+const getGoalCategories = `-- name: GetGoalCategories :many
+SELECT goal_category_id, category from goal_categories
+ORDER BY category asc
+`
+
+func (q *Queries) GetGoalCategories(ctx context.Context) ([]GoalCategory, error) {
+	rows, err := q.db.Query(ctx, getGoalCategories)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GoalCategory
+	for rows.Next() {
+		var i GoalCategory
+		if err := rows.Scan(&i.GoalCategoryID, &i.Category); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getGoalCategory = `-- name: GetGoalCategory :one
+SELECT goal_category_id, category from goal_categories
+WHERE goal_category_id = $1 LIMIT 1
+`
+
+func (q *Queries) GetGoalCategory(ctx context.Context, goalCategoryID uuid.UUID) (GoalCategory, error) {
+	row := q.db.QueryRow(ctx, getGoalCategory, goalCategoryID)
+	var i GoalCategory
+	err := row.Scan(&i.GoalCategoryID, &i.Category)
+	return i, err
+}
+
 const getGoalsByPlayer = `-- name: GetGoalsByPlayer :many
 SELECT 
-    g.goal_id,
-    g.goal_name,
-    g.goal_type,
+    pg.drill_id,
+    d.drill_name,
+    pg.goal_name,
+    pg.goal_description,
     pg.current_value,
-    pg.goal_value
+    pg.goal_value,
+    gc.category,
+    gc.goal_category_id
 FROM player_goals as pg
-JOIN goals as g on g.goal_id = pg.goal_id
+JOIN drills d on d.drill_id = pg.drill_id
+JOIN goal_categories gc on gc.goal_category_id = pg.goal_category_id
 WHERE pg.player_id = $1
 `
 
 type GetGoalsByPlayerRow struct {
-	GoalID       uuid.UUID   `json:"goalId"`
-	GoalName     string      `json:"goalName"`
-	GoalType     string      `json:"goalType"`
-	CurrentValue pgtype.Int4 `json:"currentValue"`
-	GoalValue    int32       `json:"goalValue"`
+	DrillID         uuid.UUID   `json:"drillId"`
+	DrillName       string      `json:"drillName"`
+	GoalName        string      `json:"goalName"`
+	GoalDescription pgtype.Text `json:"goalDescription"`
+	CurrentValue    pgtype.Int4 `json:"currentValue"`
+	GoalValue       int32       `json:"goalValue"`
+	Category        string      `json:"category"`
+	GoalCategoryID  uuid.UUID   `json:"goalCategoryId"`
 }
 
 func (q *Queries) GetGoalsByPlayer(ctx context.Context, playerID uuid.UUID) ([]GetGoalsByPlayerRow, error) {
@@ -355,11 +434,14 @@ func (q *Queries) GetGoalsByPlayer(ctx context.Context, playerID uuid.UUID) ([]G
 	for rows.Next() {
 		var i GetGoalsByPlayerRow
 		if err := rows.Scan(
-			&i.GoalID,
+			&i.DrillID,
+			&i.DrillName,
 			&i.GoalName,
-			&i.GoalType,
+			&i.GoalDescription,
 			&i.CurrentValue,
 			&i.GoalValue,
+			&i.Category,
+			&i.GoalCategoryID,
 		); err != nil {
 			return nil, err
 		}
@@ -539,7 +621,7 @@ func (q *Queries) GetPerformancesBySession(ctx context.Context, sessionID uuid.U
 }
 
 const getPlayerGoal = `-- name: GetPlayerGoal :one
-SELECT player_goal_id, player_id, goal_id, current_value, goal_value from player_goals
+SELECT player_goal_id, player_id, drill_id, current_value, goal_value, goal_category_id, goal_name, goal_description from player_goals
 WHERE player_goal_id = $1 LIMIT 1
 `
 
@@ -549,9 +631,12 @@ func (q *Queries) GetPlayerGoal(ctx context.Context, playerGoalID uuid.UUID) (Pl
 	err := row.Scan(
 		&i.PlayerGoalID,
 		&i.PlayerID,
-		&i.GoalID,
+		&i.DrillID,
 		&i.CurrentValue,
 		&i.GoalValue,
+		&i.GoalCategoryID,
+		&i.GoalName,
+		&i.GoalDescription,
 	)
 	return i, err
 }
@@ -762,8 +847,8 @@ func (q *Queries) ListPerformances(ctx context.Context) ([]PlayerPerformance, er
 }
 
 const listPlayerGoals = `-- name: ListPlayerGoals :many
-SELECT player_goal_id, player_id, goal_id, current_value, goal_value from player_goals
-ORDER BY goal_id
+SELECT player_goal_id, player_id, drill_id, current_value, goal_value, goal_category_id, goal_name, goal_description from player_goals
+ORDER BY player_goal_id
 `
 
 func (q *Queries) ListPlayerGoals(ctx context.Context) ([]PlayerGoal, error) {
@@ -778,9 +863,12 @@ func (q *Queries) ListPlayerGoals(ctx context.Context) ([]PlayerGoal, error) {
 		if err := rows.Scan(
 			&i.PlayerGoalID,
 			&i.PlayerID,
-			&i.GoalID,
+			&i.DrillID,
 			&i.CurrentValue,
 			&i.GoalValue,
+			&i.GoalCategoryID,
+			&i.GoalName,
+			&i.GoalDescription,
 		); err != nil {
 			return nil, err
 		}
@@ -924,6 +1012,22 @@ func (q *Queries) UpdateGoal(ctx context.Context, arg UpdateGoalParams) error {
 	return err
 }
 
+const updateGoalCategory = `-- name: UpdateGoalCategory :exec
+UPDATE goal_categories
+    SET category = $2
+WHERE goal_category_id = $1
+`
+
+type UpdateGoalCategoryParams struct {
+	GoalCategoryID uuid.UUID `json:"goalCategoryId"`
+	Category       string    `json:"category"`
+}
+
+func (q *Queries) UpdateGoalCategory(ctx context.Context, arg UpdateGoalCategoryParams) error {
+	_, err := q.db.Exec(ctx, updateGoalCategory, arg.GoalCategoryID, arg.Category)
+	return err
+}
+
 const updatePerformance = `-- name: UpdatePerformance :exec
 UPDATE player_performances
     SET player_id = $2,
@@ -958,27 +1062,36 @@ func (q *Queries) UpdatePerformance(ctx context.Context, arg UpdatePerformancePa
 const updatePlayerGoal = `-- name: UpdatePlayerGoal :exec
 UPDATE player_goals
     SET player_id = $2,
-    goal_id = $3,
+    drill_id = $3,
     current_value = $4,
-    goal_value = $5
+    goal_value = $5,
+    goal_category_id = $6,
+    goal_name = $7,
+    goal_description = $8
 WHERE player_goal_id = $1
 `
 
 type UpdatePlayerGoalParams struct {
-	PlayerGoalID uuid.UUID   `json:"playerGoalId"`
-	PlayerID     uuid.UUID   `json:"playerId"`
-	GoalID       uuid.UUID   `json:"goalId"`
-	CurrentValue pgtype.Int4 `json:"currentValue"`
-	GoalValue    int32       `json:"goalValue"`
+	PlayerGoalID    uuid.UUID   `json:"playerGoalId"`
+	PlayerID        uuid.UUID   `json:"playerId"`
+	DrillID         uuid.UUID   `json:"drillId"`
+	CurrentValue    pgtype.Int4 `json:"currentValue"`
+	GoalValue       int32       `json:"goalValue"`
+	GoalCategoryID  uuid.UUID   `json:"goalCategoryId"`
+	GoalName        string      `json:"goalName"`
+	GoalDescription pgtype.Text `json:"goalDescription"`
 }
 
 func (q *Queries) UpdatePlayerGoal(ctx context.Context, arg UpdatePlayerGoalParams) error {
 	_, err := q.db.Exec(ctx, updatePlayerGoal,
 		arg.PlayerGoalID,
 		arg.PlayerID,
-		arg.GoalID,
+		arg.DrillID,
 		arg.CurrentValue,
 		arg.GoalValue,
+		arg.GoalCategoryID,
+		arg.GoalName,
+		arg.GoalDescription,
 	)
 	return err
 }
