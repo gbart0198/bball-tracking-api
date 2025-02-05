@@ -91,6 +91,7 @@ func (s *Server) Start() error {
 	handler := cors.New(cors.Options{
 		AllowedOrigins: []string{"http://localhost:5173"},
 		Debug:          true,
+		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 	}).Handler(apiRoot)
 
 	return http.ListenAndServe(s.listenAddr, handler)
