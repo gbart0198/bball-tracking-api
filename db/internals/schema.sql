@@ -95,7 +95,8 @@ CREATE TABLE public.player_goals (
     goal_value integer NOT NULL,
     goal_category_id uuid NOT NULL,
     goal_name character varying(50) NOT NULL,
-    goal_description character varying(50)
+    goal_description character varying(50),
+    completed boolean DEFAULT false NOT NULL
 );
 
 

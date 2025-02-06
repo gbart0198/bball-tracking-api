@@ -115,11 +115,11 @@ func (q *Queries) CreatePerformance(ctx context.Context, arg CreatePerformancePa
 
 const createPlayerGoal = `-- name: CreatePlayerGoal :one
 INSERT INTO player_goals (
-    player_id, drill_id, current_value, goal_value, goal_category_id, goal_name, goal_description
+    player_id, drill_id, current_value, goal_value, goal_category_id, goal_name, goal_description, completed
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7
+    $1, $2, $3, $4, $5, $6, $7, $8
 )
-RETURNING player_goal_id, player_id, drill_id, current_value, goal_value, goal_category_id, goal_name, goal_description
+RETURNING player_goal_id, player_id, drill_id, current_value, goal_value, goal_category_id, goal_name, goal_description, completed
 `
 
 type CreatePlayerGoalParams struct {
@@ -130,6 +130,7 @@ type CreatePlayerGoalParams struct {
 	GoalCategoryID  uuid.UUID   `json:"goalCategoryId"`
 	GoalName        string      `json:"goalName"`
 	GoalDescription pgtype.Text `json:"goalDescription"`
+	Completed       bool        `json:"completed"`
 }
 
 func (q *Queries) CreatePlayerGoal(ctx context.Context, arg CreatePlayerGoalParams) (PlayerGoal, error) {
@@ -141,6 +142,7 @@ func (q *Queries) CreatePlayerGoal(ctx context.Context, arg CreatePlayerGoalPara
 		arg.GoalCategoryID,
 		arg.GoalName,
 		arg.GoalDescription,
+		arg.Completed,
 	)
 	var i PlayerGoal
 	err := row.Scan(
@@ -152,6 +154,7 @@ func (q *Queries) CreatePlayerGoal(ctx context.Context, arg CreatePlayerGoalPara
 		&i.GoalCategoryID,
 		&i.GoalName,
 		&i.GoalDescription,
+		&i.Completed,
 	)
 	return i, err
 }
@@ -453,6 +456,65 @@ func (q *Queries) GetGoalsByPlayer(ctx context.Context, playerID uuid.UUID) ([]G
 	return items, nil
 }
 
+const getGoalsByPlayerAndDrill = `-- name: GetGoalsByPlayerAndDrill :many
+SELECT 
+    pg.player_goal_id, pg.player_id, pg.drill_id, pg.current_value, pg.goal_value, pg.goal_category_id, pg.goal_name, pg.goal_description, pg.completed,
+    gc.category
+FROM player_goals as pg
+JOIN drills d on d.drill_id = pg.drill_id
+JOIN goal_categories gc on gc.goal_category_id = pg.goal_category_id
+WHERE pg.player_id = $1 AND pg.drill_id = $2
+`
+
+type GetGoalsByPlayerAndDrillParams struct {
+	PlayerID uuid.UUID `json:"playerId"`
+	DrillID  uuid.UUID `json:"drillId"`
+}
+
+type GetGoalsByPlayerAndDrillRow struct {
+	PlayerGoalID    uuid.UUID   `json:"playerGoalId"`
+	PlayerID        uuid.UUID   `json:"playerId"`
+	DrillID         uuid.UUID   `json:"drillId"`
+	CurrentValue    pgtype.Int4 `json:"currentValue"`
+	GoalValue       int32       `json:"goalValue"`
+	GoalCategoryID  uuid.UUID   `json:"goalCategoryId"`
+	GoalName        string      `json:"goalName"`
+	GoalDescription pgtype.Text `json:"goalDescription"`
+	Completed       bool        `json:"completed"`
+	Category        string      `json:"category"`
+}
+
+func (q *Queries) GetGoalsByPlayerAndDrill(ctx context.Context, arg GetGoalsByPlayerAndDrillParams) ([]GetGoalsByPlayerAndDrillRow, error) {
+	rows, err := q.db.Query(ctx, getGoalsByPlayerAndDrill, arg.PlayerID, arg.DrillID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetGoalsByPlayerAndDrillRow
+	for rows.Next() {
+		var i GetGoalsByPlayerAndDrillRow
+		if err := rows.Scan(
+			&i.PlayerGoalID,
+			&i.PlayerID,
+			&i.DrillID,
+			&i.CurrentValue,
+			&i.GoalValue,
+			&i.GoalCategoryID,
+			&i.GoalName,
+			&i.GoalDescription,
+			&i.Completed,
+			&i.Category,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getPerformance = `-- name: GetPerformance :one
 SELECT player_performance_id, player_id, drill_id, date, attempts, successful from player_performances
 WHERE player_performance_id = $1 LIMIT 1
@@ -621,7 +683,7 @@ func (q *Queries) GetPerformancesBySession(ctx context.Context, sessionID uuid.U
 }
 
 const getPlayerGoal = `-- name: GetPlayerGoal :one
-SELECT player_goal_id, player_id, drill_id, current_value, goal_value, goal_category_id, goal_name, goal_description from player_goals
+SELECT player_goal_id, player_id, drill_id, current_value, goal_value, goal_category_id, goal_name, goal_description, completed from player_goals
 WHERE player_goal_id = $1 LIMIT 1
 `
 
@@ -637,6 +699,7 @@ func (q *Queries) GetPlayerGoal(ctx context.Context, playerGoalID uuid.UUID) (Pl
 		&i.GoalCategoryID,
 		&i.GoalName,
 		&i.GoalDescription,
+		&i.Completed,
 	)
 	return i, err
 }
@@ -847,7 +910,7 @@ func (q *Queries) ListPerformances(ctx context.Context) ([]PlayerPerformance, er
 }
 
 const listPlayerGoals = `-- name: ListPlayerGoals :many
-SELECT player_goal_id, player_id, drill_id, current_value, goal_value, goal_category_id, goal_name, goal_description from player_goals
+SELECT player_goal_id, player_id, drill_id, current_value, goal_value, goal_category_id, goal_name, goal_description, completed from player_goals
 ORDER BY player_goal_id
 `
 
@@ -869,6 +932,7 @@ func (q *Queries) ListPlayerGoals(ctx context.Context) ([]PlayerGoal, error) {
 			&i.GoalCategoryID,
 			&i.GoalName,
 			&i.GoalDescription,
+			&i.Completed,
 		); err != nil {
 			return nil, err
 		}
@@ -1067,7 +1131,8 @@ UPDATE player_goals
     goal_value = $5,
     goal_category_id = $6,
     goal_name = $7,
-    goal_description = $8
+    goal_description = $8,
+    completed = $9
 WHERE player_goal_id = $1
 `
 
@@ -1080,6 +1145,7 @@ type UpdatePlayerGoalParams struct {
 	GoalCategoryID  uuid.UUID   `json:"goalCategoryId"`
 	GoalName        string      `json:"goalName"`
 	GoalDescription pgtype.Text `json:"goalDescription"`
+	Completed       bool        `json:"completed"`
 }
 
 func (q *Queries) UpdatePlayerGoal(ctx context.Context, arg UpdatePlayerGoalParams) error {
@@ -1092,6 +1158,7 @@ func (q *Queries) UpdatePlayerGoal(ctx context.Context, arg UpdatePlayerGoalPara
 		arg.GoalCategoryID,
 		arg.GoalName,
 		arg.GoalDescription,
+		arg.Completed,
 	)
 	return err
 }

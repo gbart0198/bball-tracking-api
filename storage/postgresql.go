@@ -468,3 +468,12 @@ func (store *PostgreSqlStorage) DeleteGoalCategory(goalCategoryID string) {
 		log.Fatal(err)
 	}
 }
+
+func (store *PostgreSqlStorage) GetGoalsByPlayerAndDrill(params db.GetGoalsByPlayerAndDrillParams) []db.GetGoalsByPlayerAndDrillRow {
+	goals, err := store.queries.GetGoalsByPlayerAndDrill(store.ctx, params)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return goals
+}

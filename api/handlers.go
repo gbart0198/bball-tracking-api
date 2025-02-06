@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gbart0198/bball-tracker-api/db"
+	"github.com/gbart0198/bball-tracker-api/utils"
 )
 
 /*
@@ -172,6 +173,7 @@ func (s *Server) handleCreatePlayerPerformance(w http.ResponseWriter, r *http.Re
 		return
 	}
 	createdPerformance := s.repo.CreatePlayerPerformance(performance)
+	utils.HandlePlayerGoalUpdates(createdPerformance, s.repo)
 	w.WriteHeader(http.StatusCreated)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(createdPerformance)

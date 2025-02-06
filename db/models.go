@@ -36,6 +36,7 @@ type PlayerGoal struct {
 	GoalCategoryID  uuid.UUID   `json:"goalCategoryId"`
 	GoalName        string      `json:"goalName"`
 	GoalDescription pgtype.Text `json:"goalDescription"`
+	Completed       bool        `json:"completed"`
 }
 
 type PlayerPerformance struct {

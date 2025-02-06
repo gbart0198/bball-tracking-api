@@ -146,9 +146,9 @@ ORDER BY player_goal_id;
 
 -- name: CreatePlayerGoal :one
 INSERT INTO player_goals (
-    player_id, drill_id, current_value, goal_value, goal_category_id, goal_name, goal_description
+    player_id, drill_id, current_value, goal_value, goal_category_id, goal_name, goal_description, completed
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7
+    $1, $2, $3, $4, $5, $6, $7, $8
 )
 RETURNING *;
 
@@ -160,7 +160,8 @@ UPDATE player_goals
     goal_value = $5,
     goal_category_id = $6,
     goal_name = $7,
-    goal_description = $8
+    goal_description = $8,
+    completed = $9
 WHERE player_goal_id = $1;
 
 -- name: DeletePlayerGoal :exec
@@ -292,5 +293,12 @@ WHERE goal_category_id = $1;
 DELETE FROM goal_categories
 WHERE goal_category_id = $1;
 
-
+-- name: GetGoalsByPlayerAndDrill :many
+SELECT 
+    pg.*,
+    gc.category
+FROM player_goals as pg
+JOIN drills d on d.drill_id = pg.drill_id
+JOIN goal_categories gc on gc.goal_category_id = pg.goal_category_id
+WHERE pg.player_id = $1 AND pg.drill_id = $2;
 
