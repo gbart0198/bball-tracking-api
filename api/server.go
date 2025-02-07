@@ -3,19 +3,21 @@ package api
 import (
 	"net/http"
 
+	"github.com/gbart0198/bball-tracker-api/api/handlers"
 	"github.com/gbart0198/bball-tracker-api/storage"
 	"github.com/rs/cors"
 )
 
 type Server struct {
 	listenAddr string
-	repo       storage.Storage
+	handler    *handlers.Handler
 }
 
 func NewServer(listenAddr string, repo storage.Storage) *Server {
+	handler := handlers.NewHandler(repo)
 	return &Server{
 		listenAddr: listenAddr,
-		repo:       repo,
+		handler:    handler,
 	}
 }
 
@@ -23,35 +25,35 @@ func (s *Server) Start() error {
 	router := http.NewServeMux()
 
 	// User Routes
-	router.HandleFunc("GET /user/{userId}", s.handleGetUser)
-	router.HandleFunc("GET /user", s.handleListUsers)
-	router.HandleFunc("PUT /user", s.handleCreateUser)
-	router.HandleFunc("POST /user", s.handleUpdateUser)
-	router.HandleFunc("DELETE /user/{userId}", s.handleDeleteUser)
+	router.HandleFunc("GET /user/{userId}", s.handler.HandleGetUser)
+	router.HandleFunc("GET /user", s.handler.HandleListUsers)
+	router.HandleFunc("PUT /user", s.handler.HandleCreateUser)
+	router.HandleFunc("POST /user", s.handler.HandleUpdateUser)
+	router.HandleFunc("DELETE /user/{userId}", s.handler.HandleDeleteUser)
 
 	// Drill Routes
-	router.HandleFunc("GET /drill/{drillId}", s.handleGetDrill)
-	router.HandleFunc("GET /drill", s.handleListDrills)
-	router.HandleFunc("PUT /drill", s.handleCreateDrill)
-	router.HandleFunc("POST /drill", s.handleUpdateDrill)
-	router.HandleFunc("DELETE /drill/{drillId}", s.handleDeleteDrill)
+	router.HandleFunc("GET /drill/{drillId}", s.handler.HandleGetDrill)
+	router.HandleFunc("GET /drill", s.handler.HandleListDrills)
+	router.HandleFunc("PUT /drill", s.handler.HandleCreateDrill)
+	router.HandleFunc("POST /drill", s.handler.HandleUpdateDrill)
+	router.HandleFunc("DELETE /drill/{drillId}", s.handler.HandleDeleteDrill)
 
 	// Goal Routes
-	router.HandleFunc("GET /goal/{goalId}", s.handleGetGoal)
-	router.HandleFunc("GET /goal", s.handleListGoals)
-	router.HandleFunc("PUT /goal", s.handleCreateGoal)
-	router.HandleFunc("POST /goal", s.handleUpdateGoal)
-	router.HandleFunc("DELETE /goal/{goalId}", s.handleDeleteGoal)
+	router.HandleFunc("GET /goal/{goalId}", s.handler.HandleGetGoal)
+	router.HandleFunc("GET /goal", s.handler.HandleListGoals)
+	router.HandleFunc("PUT /goal", s.handler.HandleCreateGoal)
+	router.HandleFunc("POST /goal", s.handler.HandleUpdateGoal)
+	router.HandleFunc("DELETE /goal/{goalId}", s.handler.HandleDeleteGoal)
 
 	// Player Performance Routes
-	router.HandleFunc("GET /performance/{performanceId}", s.handleGetPlayerPerformance)
-	router.HandleFunc("GET /performance", s.handleListPlayerPerformances)
-	router.HandleFunc("PUT /performance", s.handleCreatePlayerPerformance)
-	router.HandleFunc("POST /performance", s.handleUpdatePlayerPerformance)
-	router.HandleFunc("DELETE /performance/{performanceId}", s.handleDeletePlayerPerformance)
-	router.HandleFunc("GET /performance/player/{userId}", s.handleGetPerformancesByPlayer)
-	router.HandleFunc("GET /performance/drill/{drillId}", s.handleGetPerformancesByDrill)
-	router.HandleFunc("GET /performance/session/{sessionId}", s.handleGetPerformancesBySession)
+	router.HandleFunc("GET /performance/{performanceId}", s.handler.HandleGetPlayerPerformance)
+	router.HandleFunc("GET /performance", s.handler.HandleListPlayerPerformances)
+	router.HandleFunc("PUT /performance", s.handler.HandleCreatePlayerPerformance)
+	router.HandleFunc("POST /performance", s.handler.HandleUpdatePlayerPerformance)
+	router.HandleFunc("DELETE /performance/{performanceId}", s.handler.HandleDeletePlayerPerformance)
+	router.HandleFunc("GET /performance/player/{userId}", s.handler.HandleGetPerformancesByPlayer)
+	router.HandleFunc("GET /performance/drill/{drillId}", s.handler.HandleGetPerformancesByDrill)
+	router.HandleFunc("GET /performance/session/{sessionId}", s.handler.HandleGetPerformancesBySession)
 
 	// Session Routes
 	router.HandleFunc("GET /session/{sessionId}", s.handleGetSession)
