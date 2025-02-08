@@ -84,7 +84,7 @@ DELETE FROM drills
 WHERE drill_id = $1;
 
 -- name: GetPerformancesByPlayer :many
-SELECT 
+SELECT
     player_performance_id,
     u.username,
     d.drill_name,
@@ -92,14 +92,14 @@ SELECT
     attempts,
     successful
 FROM player_performances as p
-JOIN users as u ON p.player_id = u.user_id 
+JOIN users as u ON p.player_id = u.user_id
 JOIN drills as d on d.drill_id = p.drill_id
 WHERE player_id = $1
 ORDER BY date desc;
 
 
 -- name: GetPerformancesByDrill :many
-SELECT 
+SELECT
     p.date,
     d.drill_id,
     d.drill_name,
@@ -228,7 +228,7 @@ SELECT * from sessions
 WHERE user_id = $1;
 
 -- name: GetPerformancesBySession :many
-SELECT 
+SELECT
     p.player_id,
     p.date,
     d.drill_id,
@@ -241,7 +241,7 @@ JOIN session_performances as sp on sp.player_performance_id = p.player_performan
 WHERE sp.session_id = $1;
 
 -- name: GetSessionByPerformance :one
-SELECT 
+SELECT
     sessions.session_id,
     session_type,
     session_name,
@@ -253,7 +253,7 @@ JOIN session_performances as sp on sp.session_id = sessions.session_id
 WHERE sp.player_performance_id = $1;
 
 -- name: GetGoalsByPlayer :many
-SELECT 
+SELECT
     pg.drill_id,
     d.drill_name,
     pg.goal_name,
@@ -261,7 +261,8 @@ SELECT
     pg.current_value,
     pg.goal_value,
     gc.category,
-    gc.goal_category_id
+    gc.goal_category_id,
+    pg.completed
 FROM player_goals as pg
 JOIN drills d on d.drill_id = pg.drill_id
 JOIN goal_categories gc on gc.goal_category_id = pg.goal_category_id
@@ -294,11 +295,10 @@ DELETE FROM goal_categories
 WHERE goal_category_id = $1;
 
 -- name: GetGoalsByPlayerAndDrill :many
-SELECT 
+SELECT
     pg.*,
     gc.category
 FROM player_goals as pg
 JOIN drills d on d.drill_id = pg.drill_id
 JOIN goal_categories gc on gc.goal_category_id = pg.goal_category_id
 WHERE pg.player_id = $1 AND pg.drill_id = $2;
-

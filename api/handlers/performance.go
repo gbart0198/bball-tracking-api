@@ -8,11 +8,6 @@ import (
 	"github.com/gbart0198/bball-tracker-api/utils"
 )
 
-/*
-* --------------------------------------------------------
-* Player Performances Handlers
-* --------------------------------------------------------
- */
 func (h *Handler) HandleGetPlayerPerformance(w http.ResponseWriter, r *http.Request) {
 	performanceID := r.PathValue("performanceId")
 	performance := h.repo.GetPlayerPerformance(performanceID)
@@ -21,6 +16,7 @@ func (h *Handler) HandleGetPlayerPerformance(w http.ResponseWriter, r *http.Requ
 	json.NewEncoder(w).Encode(performance)
 }
 
+// HandleListPlayerPerformances returns a list of all player performances
 func (h *Handler) HandleListPlayerPerformances(w http.ResponseWriter, r *http.Request) {
 	performances := h.repo.ListPlayerPerformances()
 

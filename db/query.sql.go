@@ -401,7 +401,7 @@ func (q *Queries) GetGoalCategory(ctx context.Context, goalCategoryID uuid.UUID)
 }
 
 const getGoalsByPlayer = `-- name: GetGoalsByPlayer :many
-SELECT 
+SELECT
     pg.drill_id,
     d.drill_name,
     pg.goal_name,
@@ -409,7 +409,8 @@ SELECT
     pg.current_value,
     pg.goal_value,
     gc.category,
-    gc.goal_category_id
+    gc.goal_category_id,
+    pg.completed
 FROM player_goals as pg
 JOIN drills d on d.drill_id = pg.drill_id
 JOIN goal_categories gc on gc.goal_category_id = pg.goal_category_id
@@ -425,6 +426,7 @@ type GetGoalsByPlayerRow struct {
 	GoalValue       int32       `json:"goalValue"`
 	Category        string      `json:"category"`
 	GoalCategoryID  uuid.UUID   `json:"goalCategoryId"`
+	Completed       bool        `json:"completed"`
 }
 
 func (q *Queries) GetGoalsByPlayer(ctx context.Context, playerID uuid.UUID) ([]GetGoalsByPlayerRow, error) {
@@ -445,6 +447,7 @@ func (q *Queries) GetGoalsByPlayer(ctx context.Context, playerID uuid.UUID) ([]G
 			&i.GoalValue,
 			&i.Category,
 			&i.GoalCategoryID,
+			&i.Completed,
 		); err != nil {
 			return nil, err
 		}
@@ -457,7 +460,7 @@ func (q *Queries) GetGoalsByPlayer(ctx context.Context, playerID uuid.UUID) ([]G
 }
 
 const getGoalsByPlayerAndDrill = `-- name: GetGoalsByPlayerAndDrill :many
-SELECT 
+SELECT
     pg.player_goal_id, pg.player_id, pg.drill_id, pg.current_value, pg.goal_value, pg.goal_category_id, pg.goal_name, pg.goal_description, pg.completed,
     gc.category
 FROM player_goals as pg
@@ -535,7 +538,7 @@ func (q *Queries) GetPerformance(ctx context.Context, playerPerformanceID uuid.U
 }
 
 const getPerformancesByDrill = `-- name: GetPerformancesByDrill :many
-SELECT 
+SELECT
     p.date,
     d.drill_id,
     d.drill_name,
@@ -582,7 +585,7 @@ func (q *Queries) GetPerformancesByDrill(ctx context.Context, drillID uuid.UUID)
 }
 
 const getPerformancesByPlayer = `-- name: GetPerformancesByPlayer :many
-SELECT 
+SELECT
     player_performance_id,
     u.username,
     d.drill_name,
@@ -590,7 +593,7 @@ SELECT
     attempts,
     successful
 FROM player_performances as p
-JOIN users as u ON p.player_id = u.user_id 
+JOIN users as u ON p.player_id = u.user_id
 JOIN drills as d on d.drill_id = p.drill_id
 WHERE player_id = $1
 ORDER BY date desc
@@ -633,7 +636,7 @@ func (q *Queries) GetPerformancesByPlayer(ctx context.Context, playerID uuid.UUI
 }
 
 const getPerformancesBySession = `-- name: GetPerformancesBySession :many
-SELECT 
+SELECT
     p.player_id,
     p.date,
     d.drill_id,
@@ -724,7 +727,7 @@ func (q *Queries) GetSession(ctx context.Context, sessionID uuid.UUID) (Session,
 }
 
 const getSessionByPerformance = `-- name: GetSessionByPerformance :one
-SELECT 
+SELECT
     sessions.session_id,
     session_type,
     session_name,

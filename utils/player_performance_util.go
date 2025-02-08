@@ -25,6 +25,9 @@ func HandlePlayerGoalUpdates(playerPerformance *db.PlayerPerformance, repo stora
 		goalUpdated := false
 		if goal.Category == "completion" {
 			goal.CurrentValue.Int32++
+			if goal.CurrentValue.Int32 >= goal.GoalValue {
+				goal.Completed = true
+			}
 			goalUpdated = true
 		} else if goal.Category == "performance" {
 			if playerPerformance.Successful.Int32 > goal.CurrentValue.Int32 {
