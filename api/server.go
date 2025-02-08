@@ -56,35 +56,35 @@ func (s *Server) Start() error {
 	router.HandleFunc("GET /performance/session/{sessionId}", s.handler.HandleGetPerformancesBySession)
 
 	// Session Routes
-	router.HandleFunc("GET /session/{sessionId}", s.handleGetSession)
-	router.HandleFunc("GET /session", s.handleListSessions)
-	router.HandleFunc("PUT /session", s.handleCreateSession)
-	router.HandleFunc("POST /session", s.handleUpdateSession)
-	router.HandleFunc("DELETE /session/{sessionId}", s.handleDeleteSession)
-	router.HandleFunc("GET /session/owner/{userId}", s.handleGetSessionsByOwner)
-	router.HandleFunc("GET /session/performance/{performanceId}", s.handleGetSessionByPerformance)
+	router.HandleFunc("GET /session/{sessionId}", s.handler.HandleGetSession)
+	router.HandleFunc("GET /session", s.handler.HandleListSessions)
+	router.HandleFunc("PUT /session", s.handler.HandleCreateSession)
+	router.HandleFunc("POST /session", s.handler.HandleUpdateSession)
+	router.HandleFunc("DELETE /session/{sessionId}", s.handler.HandleDeleteSession)
+	router.HandleFunc("GET /session/owner/{userId}", s.handler.HandleGetSessionsByOwner)
+	router.HandleFunc("GET /session/performance/{performanceId}", s.handler.HandleGetSessionByPerformance)
 
 	// Player Goal Routes
-	router.HandleFunc("GET /player-goal/{playerGoalId}", s.handleGetPlayerGoal)
-	router.HandleFunc("GET /player-goal", s.handleListPlayerGoals)
-	router.HandleFunc("PUT /player-goal", s.handleCreatePlayerGoal)
-	router.HandleFunc("POST /player-goal", s.handleUpdatePlayerGoal)
-	router.HandleFunc("DELETE /player-goal/{playerGoalId}", s.handleDeletePlayerGoal)
-	router.HandleFunc("GET /player-goal/player/{userId}", s.handleGetGoalsByPlayer)
+	router.HandleFunc("GET /player-goal/{playerGoalId}", s.handler.HandleGetPlayerGoal)
+	router.HandleFunc("GET /player-goal", s.handler.HandleListPlayerGoals)
+	router.HandleFunc("PUT /player-goal", s.handler.HandleCreatePlayerGoal)
+	router.HandleFunc("POST /player-goal", s.handler.HandleUpdatePlayerGoal)
+	router.HandleFunc("DELETE /player-goal/{playerGoalId}", s.handler.HandleDeletePlayerGoal)
+	router.HandleFunc("GET /player-goal/player/{userId}", s.handler.HandleGetGoalsByPlayer)
 
 	// Session Performance Routes
-	router.HandleFunc("GET /session-performance/{sessionPerformanceId}", s.handleGetSessionPerformance)
-	router.HandleFunc("GET /session-performance", s.handleListSessionPerformances)
-	router.HandleFunc("PUT /session-performance", s.handleCreateSessionPerformance)
-	router.HandleFunc("POST /session-performance", s.handleUpdateSessionPerformance)
-	router.HandleFunc("DELETE /session-performance/{sessionPerformanceId}", s.handleDeleteSessionPerformance)
+	router.HandleFunc("GET /session-performance/{sessionPerformanceId}", s.handler.HandleGetSessionPerformance)
+	router.HandleFunc("GET /session-performance", s.handler.HandleListSessionPerformances)
+	router.HandleFunc("PUT /session-performance", s.handler.HandleCreateSessionPerformance)
+	router.HandleFunc("POST /session-performance", s.handler.HandleUpdateSessionPerformance)
+	router.HandleFunc("DELETE /session-performance/{sessionPerformanceId}", s.handler.HandleDeleteSessionPerformance)
 
 	// Goal Category Routes
-	router.HandleFunc("GET /goal-category/{goalCategoryId}", s.handleGetGoalCategory)
-	router.HandleFunc("GET /goal-category", s.handleGetGoalCategories)
-	router.HandleFunc("PUT /goal-category/{goalCategoryId}", s.handleCreateGoalCategory)
-	router.HandleFunc("POST /goal-category", s.handleUpdateGoalCategory)
-	router.HandleFunc("DELETE /goal-category/{goalCategoryId}", s.handleDeleteGoalCategory)
+	router.HandleFunc("GET /goal-category/{goalCategoryId}", s.handler.HandleGetGoalCategory)
+	router.HandleFunc("GET /goal-category", s.handler.HandleGetGoalCategories)
+	router.HandleFunc("PUT /goal-category/{goalCategoryId}", s.handler.HandleCreateGoalCategory)
+	router.HandleFunc("POST /goal-category", s.handler.HandleUpdateGoalCategory)
+	router.HandleFunc("DELETE /goal-category/{goalCategoryId}", s.handler.HandleDeleteGoalCategory)
 
 	apiRoot := http.NewServeMux()
 
