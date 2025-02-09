@@ -403,6 +403,7 @@ func (q *Queries) GetGoalCategory(ctx context.Context, goalCategoryID uuid.UUID)
 const getGoalsByPlayer = `-- name: GetGoalsByPlayer :many
 SELECT
     pg.drill_id,
+    pg.player_goal_id,
     d.drill_name,
     pg.goal_name,
     pg.goal_description,
@@ -419,6 +420,7 @@ WHERE pg.player_id = $1
 
 type GetGoalsByPlayerRow struct {
 	DrillID         uuid.UUID   `json:"drillId"`
+	PlayerGoalID    uuid.UUID   `json:"playerGoalId"`
 	DrillName       string      `json:"drillName"`
 	GoalName        string      `json:"goalName"`
 	GoalDescription pgtype.Text `json:"goalDescription"`
@@ -440,6 +442,7 @@ func (q *Queries) GetGoalsByPlayer(ctx context.Context, playerID uuid.UUID) ([]G
 		var i GetGoalsByPlayerRow
 		if err := rows.Scan(
 			&i.DrillID,
+			&i.PlayerGoalID,
 			&i.DrillName,
 			&i.GoalName,
 			&i.GoalDescription,

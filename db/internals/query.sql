@@ -255,6 +255,7 @@ WHERE sp.player_performance_id = $1;
 -- name: GetGoalsByPlayer :many
 SELECT
     pg.drill_id,
+    pg.player_goal_id,
     d.drill_name,
     pg.goal_name,
     pg.goal_description,
